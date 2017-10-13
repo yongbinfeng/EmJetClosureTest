@@ -1,0 +1,2 @@
+# sampleCollection name  , MC/DATA ,    input file
+QCDMC                    , MC      ,    /data/users/fengyb/ClosureTest/TestClosure/inputs/20170823/input_QCD.txt
