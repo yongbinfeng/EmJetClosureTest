@@ -30,6 +30,9 @@ int main(int argc, char *argv[])
         ValueArg<string> sampleCollArg("s","sampleColl","Name of sampleCollection to run over. Unspecified: Run over all.",false,"","string");
         cmd.add( sampleCollArg );
 
+        ValueArg<int> repeatedTimeArg("r", "repeatedtime", "repeated time for smearing FR histograms and predicting number of backgrounds", false, 1, "int");
+        cmd.add( repeatedTimeArg ); 
+
 	// Parse the args.
 	cmd.parse( argc, argv );
 
@@ -37,13 +40,12 @@ int main(int argc, char *argv[])
 	string iconfig     = configArg.getValue();
 	string ioutputDir  = outputDirArg.getValue();
         string isampleColl = sampleCollArg.getValue(); 
+        int repeatedTime   = repeatedTimeArg.getValue(); 
         std::cout << "Running on SampleCollection " << isampleColl << std::endl;
-        string sampleCollDir = ioutputDir + "/" + isampleColl;
-        std::cout << "Output directory set to : " << sampleCollDir << std::endl;
         time_t t = time(0);
         struct tm * now = localtime( & t );
-        sampleCollDir += "/" + std::to_string(now->tm_mon+1) + std::to_string(now->tm_mday) + std::to_string(now->tm_hour);
-        std::cout << "Creating directory: " << sampleCollDir << std::endl;
+        string sampleCollDir = ioutputDir + "/" + std::to_string(now->tm_mon+1) + std::to_string(now->tm_mday) + std::to_string(now->tm_hour);
+        std::cout << "Creating directory: " << sampleCollDir << " for output"<< std::endl;
         string mkdir_command = "mkdir -p " + sampleCollDir;
         system(mkdir_command.c_str());
 
@@ -55,13 +57,17 @@ int main(int argc, char *argv[])
     
         // Process files if there are any to be processed
         EmJetEventCount hm(ejsamplesColl);
-        hm.OpenOutputFile(sampleCollDir+"/histo-result.root");
+        hm.OpenOutputFile(sampleCollDir+"/histo-"+isampleColl+"_result.root");
         std::cout << "file opened successfully "<< std::endl;
-        hm.SetOptions(ejsamplesColl.isData);
-        for(int i=0; i<500; i++){
-          std::cout << " running on " << i << " time " << std::endl;
-          hm.LoopOverCurrentTree();
-        }
+        string ffr = "/data/users/fengyb/ClosureTest/TestClosure/FRHisto/result_fakerate.root";
+        string hfr = "fakerate_QCD";
+        // set basic info for closure test
+        hm.SetOptions(ffr, hfr, ejsamplesColl.isData);
+        //for(int i=0; i<2; i++){
+        //  std::cout << " running on " << i << " time " << std::endl;
+        //  hm.LoopOverCurrentTree();
+        //}
+        hm.LoopOverCurrentTree(repeatedTime);
         hm.WriteHistograms();
         std::cout << "--------------------------finished--------------------------------\n";
 

@@ -16,15 +16,16 @@ using std::string;
 class FrCal
 {
   public:
+    FrCal();
     FrCal(string filename, string histoname);
     ~FrCal() {};
     double GetFakerate(int nTrack);
     void SmearFrHisto();
+    FrCal Clone(string histoname);
   private:
     TH1F* histo_;
     string histoname_;
     int nbins_;
-    int GetNBins();
 };
 
 double PnTag(double fr[], int nTag);

@@ -43,12 +43,12 @@ class EmJetEventCount : protected BaseClass
     ~EmJetEventCount(){};
     void OpenOutputFile (string ofilename);
     void InitHistograms ();
-    long double FillHistograms(long eventnumber, double w);
+    long double FillHistograms(long eventnumber, double w, FrCal frcal);
     void WriteHistograms();
-    void SetOptions(bool isData = false );
+    void SetOptions(string filename, string histoname, bool isData = false);
     //virtual int SetTree(string ifilename) = 0;
     SET_MEMBER_DEFAULT(MaxEntries, long, nentries_max, -1);
-    long LoopOverCurrentTree ();
+    long LoopOverCurrentTree (int ntimes = 1);
 
   protected:
     TFile* ofile_;
@@ -57,13 +57,16 @@ class EmJetEventCount : protected BaseClass
     long nentries_max_; // Maximum number of entries to process for current tree (Set to -1 to run over all entries)
     long nentries_to_process_; // Actual number of entries to process for current tree
     TStopwatch timer_total_;
+    TStopwatch timer_;
+    int reportEvery_ = 100000;
 
   private:
     double CalculateTreeWeight(int treenumber, long eventnumber);
     void InitCrossSection(const EmJetSampleCollection& samplesColl);
+    bool IsChainValid();
     unique_ptr<Histos> histo_;
     bool isData_;
-    FrCal* frcal_;
+    FrCal frcal_;
     vector<double> vtreexsec_;
 };
 
