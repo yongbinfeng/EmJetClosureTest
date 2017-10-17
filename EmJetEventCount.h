@@ -43,17 +43,16 @@ class EmJetEventCount : protected BaseClass
     ~EmJetEventCount(){};
     void OpenOutputFile (string ofilename);
     void InitHistograms ();
-    long double FillHistograms(long eventnumber, double w, FrCal frcal);
     void WriteHistograms();
-    void SetOptions(string filename, string histoname, bool isData = false);
+    void SetOptions(string filename, const vector<string>& histoname, bool isData = false);
     //virtual int SetTree(string ifilename) = 0;
     SET_MEMBER_DEFAULT(MaxEntries, long, nentries_max, -1);
-    long LoopOverCurrentTree (int ntimes = 1);
+    void LoopOverCurrentTree (int ntimes = 1);
 
   protected:
     TFile* ofile_;
-    TTree* tree_; // Current tree
-    long nentries_; // Number of entries in current tree
+    TTree* tree_; 
+    long nentries_; // Number of entries in chain
     long nentries_max_; // Maximum number of entries to process for current tree (Set to -1 to run over all entries)
     long nentries_to_process_; // Actual number of entries to process for current tree
     TStopwatch timer_total_;
@@ -61,13 +60,24 @@ class EmJetEventCount : protected BaseClass
     int reportEvery_ = 100000;
 
   private:
-    double CalculateTreeWeight(int treenumber, long eventnumber);
-    void InitCrossSection(const EmJetSampleCollection& samplesColl);
-    bool IsChainValid();
     unique_ptr<Histos> histo_;
     bool isData_;
-    FrCal frcal_;
+    vector<FrCal> vfrcal_; // vector of FrCal from input FR histograms
+    vector<vector<FrCal>> vvfrcal_; // vector of smeared vector<FrCal> vfrcal_
+    vector<vector<double>> vvn2tag_; 
     vector<double> vtreexsec_;
+    long TotalEvents_;
+    double n2tag_;
+    int fcurrent_;     // index of the current tree in the tchain
+    double tweight_;   // weight of the current tree in the tchain
+    void CountEvents(long eventnumber, int ntimes);
+    void FillEventCountHistos(int ntimes);
+    double CalculateTreeWeight(int treenumber, long eventnumber);
+    void PrepareNewTree();
+    void PrepareFrCalVector(int ntimes);
+    void PrepareFrCalResults(int ntimes);
+    void InitCrossSection(const EmJetSampleCollection& samplesColl);
+    bool IsChainValid();
 };
 
 #endif

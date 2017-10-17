@@ -19,8 +19,9 @@ class FrCal
     FrCal();
     FrCal(string filename, string histoname);
     ~FrCal() {};
-    double GetFakerate(int nTrack);
-    void SmearFrHisto();
+    double GetFakerate(int nTrack) const;
+    void SmearFrHisto(bool doprint=true);
+    string GetHistoName();
     FrCal Clone(string histoname);
   private:
     TH1F* histo_;

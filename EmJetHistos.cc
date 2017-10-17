@@ -21,7 +21,10 @@ EmJetHistos::EmJetHistos()
   hist1d["p4_2"] = new TH1F("p4_2", "p4_2" , 10, 0, 10);
   hist1d["ht"]   = new TH1F("ht",   "ht",   100, 0, 2500);
   hist1d["nJet_tag"] = new TH1F("nJet_tag", "nJet_tag", 10, 0, 10);
-  hist1d["n2tag"] = new TH1F("n2tag", "n2tag", 500, 6, 11);
+  hist1d["n2tag_0"] = new TH1F("n2tag_0", "n2tag_0", 600, 5, 11);
+  hist1d["n2tag_1"] = new TH1F("n2tag_1", "n2tag_1", 600, 9, 15);
+  hist1d["n2tag_2"] = new TH1F("n2tag_2", "n2tag_2", 600, 1, 7);
+  hist1d["n2tag_3"] = new TH1F("n2tag_3", "n2tag_3", 600, 7, 13);
 }
 
 EmJetHistos::~EmJetHistos()
@@ -48,7 +51,10 @@ EmJetHistos::GetHistoIndex(string name)
   if (name=="p4_2") return 11;
   if (name=="ht")   return 12;
   if (name=="nJet_tag") return 13;
-  if (name=="n2tag") return 14;
+  if (name=="n2tag_0") return 14;
+  if (name=="n2tag_1") return 15;
+  if (name=="n2tag_2") return 16;
+  if (name=="n2tag_3") return 17;
   
   return -1;
 }

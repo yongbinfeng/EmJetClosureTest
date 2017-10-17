@@ -1,6 +1,7 @@
 #include "Fakerate.h"
 
-FrCal::FrCal(): histo_(0), histoname_(""), nbins_(0){
+FrCal::FrCal(): histo_(0), histoname_(""), nbins_(0)
+{
 }
 
 FrCal::FrCal(string filename, string histoname)
@@ -11,13 +12,15 @@ FrCal::FrCal(string filename, string histoname)
   nbins_ = histo_->GetNbinsX();
 }
 
-void FrCal::SmearFrHisto()
+void FrCal::SmearFrHisto(bool doprint)
 {
-  std::cout << "Start smearing the fakerate histogram " << histoname_ << " with Gaussian" << std::endl; 
+  if( doprint ){
+    std::cout << "Start smearing the fakerate histogram " << histoname_ << " with Gaussian" << std::endl; 
+  }
   gRandom = new TRandom3(0);
   for(int ibin = 1; ibin <= histo_->GetNbinsX(); ibin++){
     double newval = gRandom->Gaus( histo_->GetBinContent(ibin), histo_->GetBinError(ibin));
-    if( isDebug ){
+    if( doprint ){
       std::cout << " bin " << std::setw(2) << ibin << " gets smeared from " << std::setw(12) << histo_->GetBinContent(ibin) << " +/- "<< std::setw(14) << std::left << histo_->GetBinError(ibin) << " to " << std::setw(15) << std::left << newval << std::endl;
     }
     histo_->SetBinContent(ibin, newval);
@@ -33,7 +36,7 @@ FrCal FrCal::Clone(string histoname)
   return ofr;
 }
 
-double FrCal::GetFakerate(int nTrack)
+double FrCal::GetFakerate(int nTrack) const
 {
   int ibin = histo_->FindBin(nTrack);
   double fr = -1.0;
@@ -44,6 +47,11 @@ double FrCal::GetFakerate(int nTrack)
     fr = histo_->GetBinContent(nbins_); // overflow, use the fakerate from the maximum bin
   }
   return fr;
+}
+
+string FrCal::GetHistoName()
+{
+  return histoname_;
 }
 
 //

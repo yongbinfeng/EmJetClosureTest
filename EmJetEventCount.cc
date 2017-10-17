@@ -7,6 +7,7 @@
 using std::string;
 
 EmJetEventCount::EmJetEventCount(EmJetSampleCollection samplesColl)
+:TotalEvents_(0), n2tag_(0.), fcurrent_(-1), tweight_(1.0)
 {
   SetMaxEntries(-1);
   TChain* chain = new TChain("emJetSlimmedTree");
@@ -20,44 +21,25 @@ EmJetEventCount::EmJetEventCount(EmJetSampleCollection samplesColl)
   InitCrossSection(samplesColl);
 }
 
-long EmJetEventCount::LoopOverCurrentTree(int ntimes)
+void EmJetEventCount::LoopOverCurrentTree(int ntimes)
 {
   if( !IsChainValid() ){
-    return -1;
+    return ;
   }
   Long64_t nbytes = 0, nb = 0;
   timer_total_.Start();
 
-  int fcurrent=-1;
-  long eventCount = 0;
-  double weight = 1.0;
-  vector<long double> vn2tag;
-
   // prepare ntimes smeared fakerate histos for the Closure test
-  vector<FrCal> vfrcal;
-  vfrcal.reserve(ntimes);
-  for(int i=0; i< ntimes; i++){
-    FrCal fr_temp = frcal_.Clone("hfrsmeared"+std::to_string(i));
-    // smear the FR histograms, leaving the first one as the original
-    if( i!=0 ){
-      fr_temp.SmearFrHisto();
-    }
-    vfrcal.push_back(fr_temp);
-    vn2tag.push_back(0.);
-  }
+  PrepareFrCalVector(ntimes);
+  // prepare ntimes*4 n2tags
+  PrepareFrCalResults(ntimes);
 
   // Loop over all events in TChain
   for (Long64_t jentry = 0; jentry < nentries_to_process_; jentry++) {
     Long64_t ientry = LoadTree(jentry);
     if (ientry < 0) break;
-    if (fChain->GetTreeNumber() != fcurrent) { // New root file opened
-      std::cout << " Start a new file... " << std::endl;
-      fcurrent = fChain->GetTreeNumber();
-      TH1F* eventcounthist=(TH1F*)fChain->GetDirectory()->Get("eventCountperrun");
-      long eventCount_current = eventcounthist->Integral();
-      eventCount += eventCount_current;
-      weight = CalculateTreeWeight(fcurrent, eventCount_current);
-      std::cout << " tree number " << fcurrent << " total number of events " << eventCount_current << " weight " << weight << " n2tag " << vn2tag[0] << std::endl;
+    if (fChain->GetTreeNumber() != fcurrent_) { // New root file opened
+      PrepareNewTree();
     }
     if ( jentry % reportEvery_ == 0 ) {
       if (jentry!=0) std::cout << "Chunk processing time (s): " << timer_.RealTime() << std::endl;
@@ -66,27 +48,26 @@ long EmJetEventCount::LoopOverCurrentTree(int ntimes)
     }
     nb = fChain->GetEntry(jentry);   nbytes += nb;
 
-    // Fill histograms, Count number of events with n tags
-    for(int itime=0; itime < ntimes; itime++){
-      vn2tag[itime] += FillHistograms(jentry, weight, vfrcal[itime]);
-    }
+    // Fill event-level histograms, Count number of events with n tags
+    CountEvents(jentry, ntimes);
   }
 
-  // fill the number of events with 2 tags
-  for(int itime=0; itime < ntimes; itime++){
-    histo_->hist1d["n2tag"]->Fill(vn2tag[itime]);
-  }
+  // Fill ClosureTest results
+  FillEventCountHistos(ntimes);
 
-  std::cout << "Total number of processed events is : "<< eventCount << std::endl;
+  std::cout << "Total number of processed events is : "<< TotalEvents_ << std::endl;
   double total_time_elapsed = timer_total_.RealTime();
   std::cout << "Total processing time (s): " << total_time_elapsed << std::endl;
-  std::cout << "Total number of 2tag events predicted : " << vn2tag[0] << std::endl;
+  std::cout << "Total number of 2tag events observed:   " << n2tag_         << std::endl;
+  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[0][0] << std::endl;
+  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[1][0] << std::endl;
+  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[2][0] << std::endl;
+  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[3][0] << std::endl;
   std::cout << std::endl;
-  return eventCount;
 }
 
 
-long double EmJetEventCount::FillHistograms(long eventnumber, double w, FrCal frcal)
+void EmJetEventCount::CountEvents(long eventnumber,  int ntimes)
 {
   double ht = 0;
   int nJet_tag = 0;
@@ -100,29 +81,48 @@ long double EmJetEventCount::FillHistograms(long eventnumber, double w, FrCal fr
     if( (*jet_isEmerging)[ij] ) nJet_tag++;
   }
 
-  double fr1[4] = {-1.0, -1.0, -1.0, -1.0};// first kind of test: without using flavour info
-  //double fr2[4] = {-1.0, -1.0, -1.0, -1.0};// second kind of test: using flavour info
-  //double fr3[4] = {-1.0, -1.0, -1.0, -1.0};// third kind of test: using weighted flavour fakerate
-  //double fr4[4] = {-1.0, -1.0, -1.0, -1.0};// fourth kind of test
-  
-  for(int ij=0; ij<4; ij++){
-    //fr1[ij] = frCal(nTrack[ij], 0);
-    fr1[ij] = frcal.GetFakerate(nTrack[ij]);
-    //if( !isData_ ){
-    //  if (flavour[ij]<5 || flavour[ij]==21 || flavour[ij]==10 ) fr2[ij] = frCal(nTrack[ij], 1);
-    //  else if( flavour[ij]==5 || flavour[ij]==19 ) fr2[ij]=frCal(nTrack[ij], 2);
-    //}
-    //fr3[ij] = frCal(nTrack[ij], 3);
-    //fr4[ij] = frCal(nTrack[ij], 4);
+  // Calculate number of backgrounds
+  for(int itime=0; itime<ntimes; itime++){
+    // initialize arrays for fakerates
+    double afr0[4] = {-1.0, -1.0, -1.0, -1.0}; // results from QCD overall
+    double afr1[4] = {-1.0, -1.0, -1.0, -1.0}; // results from QCD flavour 
+    double afr2[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet overall
+    double afr3[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet flavour
+   
+    for(int ij=0; ij<4; ij++){
+      afr0[ij] = vvfrcal_[0][itime].GetFakerate(nTrack[ij]); // QCD overall
+      afr2[ij] = vvfrcal_[3][itime].GetFakerate(nTrack[ij]); // GJet overall
+      if (flavour[ij]<5 || flavour[ij]==21 || flavour[ij]==10 ){
+        afr1[ij] = vvfrcal_[1][itime].GetFakerate(nTrack[ij]); // QCD light
+        afr3[ij] = vvfrcal_[4][itime].GetFakerate(nTrack[ij]); // GJet light
+      }
+      else if( flavour[ij]==5 || flavour[ij]==19 ){
+        afr1[ij] = vvfrcal_[2][itime].GetFakerate(nTrack[ij]); // QCD B
+        afr3[ij] = vvfrcal_[5][itime].GetFakerate(nTrack[ij]); // GJet B
+      }
+    }
+
+    vvn2tag_[0][itime] += PnTag(afr0, 2) * tweight_;
+    vvn2tag_[1][itime] += PnTag(afr1, 2) * tweight_;
+    vvn2tag_[2][itime] += PnTag(afr2, 2) * tweight_;
+    vvn2tag_[3][itime] += PnTag(afr3, 2) * tweight_;
   }
 
-  long double p2 = PnTag(fr1, 2);
-  p2 = p2 *w ;
+  histo_->hist1d["ht"]->Fill(ht, tweight_);
+  histo_->hist1d["nJet_tag"]->Fill(nJet_tag, tweight_);
 
-  //histo_->hist1d["ht"]->Fill(ht, w);
-  //histo_->hist1d["nJet_tag"]->Fill(nJet_tag, w);
+  if( nJet_tag==2 ) n2tag_ += tweight_;
+}
 
-  return p2;
+void EmJetEventCount::FillEventCountHistos(int ntimes)
+{
+  // fill the number of events with 2 tags
+  for(int itime=0; itime < ntimes; itime++){
+    histo_->hist1d["n2tag_0"]->Fill(vvn2tag_[0][itime]);
+    histo_->hist1d["n2tag_1"]->Fill(vvn2tag_[1][itime]);
+    histo_->hist1d["n2tag_2"]->Fill(vvn2tag_[2][itime]);
+    histo_->hist1d["n2tag_3"]->Fill(vvn2tag_[3][itime]);
+  }  
 }
 
 void EmJetEventCount::OpenOutputFile(string ofilename)
@@ -142,19 +142,27 @@ void EmJetEventCount::WriteHistograms()
   ofile_->Write();
 }
 
-void EmJetEventCount::SetOptions(string filename, string histoname, bool isData)
+void EmJetEventCount::SetOptions(string filename, const vector<string>& vhistoname, bool isData)
 {
   isData_ = isData;
-  frcal_ = FrCal(filename, histoname);
+  // initialize FR histograms from vhistoname
+  for(auto &ihistoname: vhistoname ){
+    FrCal frcal_temp = FrCal(filename, ihistoname);
+    vfrcal_.push_back(frcal_temp);
+  }
   std::cout << " Samples set to " << (isData? "Data": "MC") << std::endl;
-  std::cout << " Fakerate histogram retrieved from " << histoname << " of " << filename << std::endl;
+  std::cout << " Fakerate histogram retrieved from" << std::endl;
+  for(auto &ihistoname: vhistoname ){
+    std::cout << "        " << ihistoname << std::endl;
+  }
+  std::cout << " of " << filename << std::endl;
 }
 
 void EmJetEventCount::InitCrossSection(const EmJetSampleCollection& samplesColl)
 {
   vtreexsec_.clear();
   for(EmJetSample sample: samplesColl.samples){
-    std::cout << "cross section " << sample.xsec*2 << std::endl;
+    std::cout << "cross section " << sample.xsec << std::endl;
     vtreexsec_.push_back(sample.xsec); 
   }
 }
@@ -167,6 +175,46 @@ double EmJetEventCount::CalculateTreeWeight(int treenumber, long eventCount)
     weight = lumi * vtreexsec_[treenumber] / eventCount;
   }
   return weight;
+}
+
+void EmJetEventCount::PrepareNewTree()
+{
+  std::cout << " Start a new file... " << std::endl;
+  fcurrent_ = fChain->GetTreeNumber();
+  TH1F* heventcount=(TH1F*)fChain->GetDirectory()->Get("eventCountperrun");
+  long eventCount_current = heventcount->Integral(); // number of events in the current tree
+  tweight_ = CalculateTreeWeight(fcurrent_, eventCount_current);
+  TotalEvents_ += eventCount_current;
+  std::cout << " tree number " << fcurrent_ << " total number of events " << eventCount_current << " tree weight " << tweight_ << " n2tag observed " << n2tag_ << std::endl;
+}
+
+void EmJetEventCount::PrepareFrCalVector(int ntimes)
+{
+  for( auto &tfrcal: vfrcal_ ){
+    vector<FrCal> vfrcal_temp;
+    for(int i=0; i< ntimes; i++){
+      FrCal fr_temp = tfrcal.Clone(tfrcal.GetHistoName()+"_"+std::to_string(i)+"_"+"smeared");
+      // smear the FR histograms, leaving the first one as the original
+      //  print out the smeared results for the first 10 histograms
+      if( i!=0 ){
+        if( i<10 ) fr_temp.SmearFrHisto(true);
+        else       fr_temp.SmearFrHisto(false);
+      }
+      vfrcal_temp.push_back(fr_temp);
+    }
+    vvfrcal_.push_back(vfrcal_temp);
+  }
+}
+
+void EmJetEventCount::PrepareFrCalResults(int ntimes)
+{ 
+  for(unsigned ifrcal=0; ifrcal < 4; ifrcal++){
+    vector<double> vn2tag_temp;
+    for(int i=0; i<ntimes; i++){
+      vn2tag_temp.push_back(0.); 
+    }
+    vvn2tag_.push_back(vn2tag_temp);
+  }
 }
 
 bool EmJetEventCount::IsChainValid(){

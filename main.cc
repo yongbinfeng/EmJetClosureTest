@@ -60,9 +60,9 @@ int main(int argc, char *argv[])
         hm.OpenOutputFile(sampleCollDir+"/histo-"+isampleColl+"_result.root");
         std::cout << "file opened successfully "<< std::endl;
         string ffr = "/data/users/fengyb/ClosureTest/TestClosure/FRHisto/result_fakerate.root";
-        string hfr = "fakerate_QCD";
+        vector<string> vhfr = {"fakerate_QCD", "fakerate_QCD_L", "fakerate_QCD_B", "fakerate_GJet", "fakerate_GJet_L", "fakerate_GJet_B"};
         // set basic info for closure test
-        hm.SetOptions(ffr, hfr, ejsamplesColl.isData);
+        hm.SetOptions(ffr, vhfr, ejsamplesColl.isData);
         //for(int i=0; i<2; i++){
         //  std::cout << " running on " << i << " time " << std::endl;
         //  hm.LoopOverCurrentTree();
