@@ -72,6 +72,7 @@ class EmJetEventCount : protected BaseClass
     double tweight_;   // weight of the current tree in the tchain
     void CountEvents(long eventnumber, int ntimes);
     void FillEventCountHistos(int ntimes);
+    void PrintOutResults();
     double CalculateTreeWeight(int treenumber, long eventnumber);
     void PrepareNewTree();
     void PrepareFrCalVector(int ntimes);

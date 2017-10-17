@@ -33,6 +33,9 @@ int main(int argc, char *argv[])
         ValueArg<int> repeatedTimeArg("r", "repeatedtime", "repeated time for smearing FR histograms and predicting number of backgrounds", false, 1, "int");
         cmd.add( repeatedTimeArg ); 
 
+        ValueArg<int> outputLabelArg("l", "outputlabel", "output label of the root file", false, 0, "int");
+        cmd.add( outputLabelArg );
+
 	// Parse the args.
 	cmd.parse( argc, argv );
 
@@ -41,6 +44,7 @@ int main(int argc, char *argv[])
 	string ioutputDir  = outputDirArg.getValue();
         string isampleColl = sampleCollArg.getValue(); 
         int repeatedTime   = repeatedTimeArg.getValue(); 
+        int outputLabel    = outputLabelArg.getValue();
         std::cout << "Running on SampleCollection " << isampleColl << std::endl;
         time_t t = time(0);
         struct tm * now = localtime( & t );
@@ -57,9 +61,10 @@ int main(int argc, char *argv[])
     
         // Process files if there are any to be processed
         EmJetEventCount hm(ejsamplesColl);
-        hm.OpenOutputFile(sampleCollDir+"/histo-"+isampleColl+"_result.root");
+        hm.OpenOutputFile(sampleCollDir+"/histo-"+isampleColl+"_result_"+std::to_string(outputLabel)+".root");
         std::cout << "file opened successfully "<< std::endl;
-        string ffr = "/data/users/fengyb/ClosureTest/TestClosure/FRHisto/result_fakerate.root";
+        //string ffr = "/data/users/fengyb/ClosureTest/TestClosure/FRHisto/result_fakerate.root";
+        string ffr = ejsamplesColl.FrCalfile;
         vector<string> vhfr = {"fakerate_QCD", "fakerate_QCD_L", "fakerate_QCD_B", "fakerate_GJet", "fakerate_GJet_L", "fakerate_GJet_B"};
         // set basic info for closure test
         hm.SetOptions(ffr, vhfr, ejsamplesColl.isData);

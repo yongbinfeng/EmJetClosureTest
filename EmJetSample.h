@@ -22,6 +22,7 @@ struct EmJetSampleCollection_s
 {
   string name; // Unique name
   bool isData; // true for data
+  string FrCalfile; // root file for Fakerate calculation
   vector<EmJetSample> samples;
 };
 

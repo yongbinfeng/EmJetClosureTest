@@ -55,15 +55,9 @@ void EmJetEventCount::LoopOverCurrentTree(int ntimes)
   // Fill ClosureTest results
   FillEventCountHistos(ntimes);
 
-  std::cout << "Total number of processed events is : "<< TotalEvents_ << std::endl;
   double total_time_elapsed = timer_total_.RealTime();
   std::cout << "Total processing time (s): " << total_time_elapsed << std::endl;
-  std::cout << "Total number of 2tag events observed:   " << n2tag_         << std::endl;
-  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[0][0] << std::endl;
-  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[1][0] << std::endl;
-  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[2][0] << std::endl;
-  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[3][0] << std::endl;
-  std::cout << std::endl;
+  PrintOutResults();
 }
 
 
@@ -110,6 +104,10 @@ void EmJetEventCount::CountEvents(long eventnumber,  int ntimes)
 
   histo_->hist1d["ht"]->Fill(ht, tweight_);
   histo_->hist1d["nJet_tag"]->Fill(nJet_tag, tweight_);
+  for(int ij=0; ij<4; ij++){
+    histo_->hist1d["jet_pt"]->Fill((*jet_pt)[ij], tweight_);
+    histo_->hist1d["jet_nTrack"]->Fill((*jet_nTrack)[ij], tweight_);
+  }
 
   if( nJet_tag==2 ) n2tag_ += tweight_;
 }
@@ -123,6 +121,17 @@ void EmJetEventCount::FillEventCountHistos(int ntimes)
     histo_->hist1d["n2tag_2"]->Fill(vvn2tag_[2][itime]);
     histo_->hist1d["n2tag_3"]->Fill(vvn2tag_[3][itime]);
   }  
+}
+
+void EmJetEventCount::PrintOutResults()
+{
+  std::cout << "Total number of processed events is : "<< TotalEvents_ << std::endl;
+  std::cout << "Total number of 2tag events observed:   " << n2tag_         << std::endl;
+  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[0][0] << std::endl;
+  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[1][0] << std::endl;
+  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[2][0] << std::endl;
+  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[3][0] << std::endl;
+  std::cout << std::endl;
 }
 
 void EmJetEventCount::OpenOutputFile(string ofilename)

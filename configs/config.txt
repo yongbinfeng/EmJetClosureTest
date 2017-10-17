@@ -1,2 +1,3 @@
-# sampleCollection name  , MC/DATA ,    input file
-QCDMC                    , MC      ,    /data/users/fengyb/ClosureTest/TestClosure/inputs/20170823/input_QCD.txt
+# sampleCollection name  , MC/DATA ,    input file                                                                     ,  Fakerate root
+QCDMCcut25mm             , MC      ,    /data/users/fengyb/ClosureTest/TestClosure/inputs/20170823/input_QCDcut25mm.txt, /data/users/fengyb/ClosureTest/TestClosure/FRHisto/result_fakerate_25mm.root
+QCDMCcut5mm              , MC      ,    /data/users/fengyb/ClosureTest/TestClosure/inputs/20170823/input_QCDcut5mm.txt,  /data/users/fengyb/ClosureTest/TestClosure/FRHisto/result_fakerate_5mm.root

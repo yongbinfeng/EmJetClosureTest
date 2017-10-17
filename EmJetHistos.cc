@@ -21,10 +21,12 @@ EmJetHistos::EmJetHistos()
   hist1d["p4_2"] = new TH1F("p4_2", "p4_2" , 10, 0, 10);
   hist1d["ht"]   = new TH1F("ht",   "ht",   100, 0, 2500);
   hist1d["nJet_tag"] = new TH1F("nJet_tag", "nJet_tag", 10, 0, 10);
-  hist1d["n2tag_0"] = new TH1F("n2tag_0", "n2tag_0", 600, 5, 11);
-  hist1d["n2tag_1"] = new TH1F("n2tag_1", "n2tag_1", 600, 9, 15);
-  hist1d["n2tag_2"] = new TH1F("n2tag_2", "n2tag_2", 600, 1, 7);
-  hist1d["n2tag_3"] = new TH1F("n2tag_3", "n2tag_3", 600, 7, 13);
+  hist1d["n2tag_0"] = new TH1F("n2tag_0", "n2tag_0", 300, 0, 30);
+  hist1d["n2tag_1"] = new TH1F("n2tag_1", "n2tag_1", 300, 0, 30);
+  hist1d["n2tag_2"] = new TH1F("n2tag_2", "n2tag_2", 300, 0, 30);
+  hist1d["n2tag_3"] = new TH1F("n2tag_3", "n2tag_3", 300, 0, 30);
+  hist1d["jet_pt"] = new TH1F("jet_pt", "jet_pt", 120, 0, 1200);
+  hist1d["jet_nTrack"] = new TH1F("jet_nTrack", "jet_nTrack", 100, 0, 100);
 }
 
 EmJetHistos::~EmJetHistos()

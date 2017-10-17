@@ -18,7 +18,6 @@ ReadFromConfigFile(string configFileName, string isampleColl, EmJetSampleCollect
   std::cout << "Look for EmJetSampleCollection " << isampleColl << " from config file: " << configFileName << std::endl;
   vector<string> lines;
   FileToLines(configFileName, lines);
-  std::cout << "okay 1" << std::endl;
   if (lines.empty()) {
     std::cerr << "Config file empty!\n";
     return;
@@ -37,11 +36,12 @@ ReadFromConfigFile(string configFileName, string isampleColl, EmJetSampleCollect
     else if( fields[0]==isampleColl ){
       std::cout << "Found sample from config file" << std::endl;
       FieldsToSampleCollection(fields, samplesColl);
+      return;
     }
-    else{
-     std::cout << " can not find the sample collection " << isampleColl << " from " << configFileName << std::endl;
+  }
+  {
+     std::cerr << " can not find the sample collection " << isampleColl << " from " << configFileName << std::endl;
      return;
-    }
   }
 }
 
@@ -92,13 +92,6 @@ FieldsToSampleCollection(const vector<string>& ifields, EmJetSampleCollection& s
   else if (ifields[1]=="DATA" or ifields[1]=="Data" ) samplesColl.isData = true;
   else std::cerr << "Sample MC/DATA not specified correctly in config file for sample: " << samplesColl.name << std::endl;
 
-  //if      (ifields[4]=="false" ) samplesColl.isSignal = false;
-  //else if (ifields[4]=="true"  ) samplesColl.isSignal = true;
-  //else std::cerr << "Sample isSignal not specified correctly in config file for sample: " << samplesColl.name << std::endl;
-
-  //sample.xsec = stof(ifields[2]);
-
-  //bool found_root = ( ifields[2].find(".root") != string::npos );
   bool found_txt = ( ifields[2].find(".txt") != string::npos );
   if ( found_txt ) {
     std::cout << " look into " << ifields[0] << " for the " << samplesColl.name << " collection" << std::endl;
@@ -127,10 +120,20 @@ FieldsToSampleCollection(const vector<string>& ifields, EmJetSampleCollection& s
        }
     }
   }
+  else {
+    std::cerr << " Invalid config file, input files not set" << std::endl;
+  }
+  bool found_root = ( ifields[3].find(".root") != string::npos );
+  if ( found_root ){
+    std::cout << " Fakerate histograms se to " << ifields[3] << std::endl;
+    samplesColl.FrCalfile = ifields[3];
+  }
+  else{
+    std::cerr << " Invalid config file, fakerate root file not set "<< std::endl;
+  }
 }
 
 void removeSpaces(string& input)
 {
   input.erase(std::remove(input.begin(),input.end(),' '),input.end());
 }
-
