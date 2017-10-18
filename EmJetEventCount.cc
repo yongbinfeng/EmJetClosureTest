@@ -21,7 +21,7 @@ EmJetEventCount::EmJetEventCount(EmJetSampleCollection samplesColl)
   InitCrossSection(samplesColl);
 }
 
-void EmJetEventCount::LoopOverCurrentTree(int ntimes)
+void EmJetEventCount::LoopOverTrees(int ntimes)
 {
   if( !IsChainValid() ){
     return ;
@@ -49,7 +49,7 @@ void EmJetEventCount::LoopOverCurrentTree(int ntimes)
     nb = fChain->GetEntry(jentry);   nbytes += nb;
 
     // Fill event-level histograms, Count number of events with n tags
-    CountEvents(jentry, ntimes);
+    LoopOverEvent(jentry, ntimes);
   }
 
   // Fill ClosureTest results
@@ -61,7 +61,7 @@ void EmJetEventCount::LoopOverCurrentTree(int ntimes)
 }
 
 
-void EmJetEventCount::CountEvents(long eventnumber,  int ntimes)
+void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
 {
   double ht = 0;
   int nJet_tag = 0;
@@ -74,6 +74,8 @@ void EmJetEventCount::CountEvents(long eventnumber,  int ntimes)
     flavour[ij] = (*jet_flavour)[ij];
     if( (*jet_isEmerging)[ij] ) nJet_tag++;
   }
+
+  if( nJet_tag==2 ) n2tag_ += tweight_;
 
   // Calculate number of backgrounds
   for(int itime=0; itime<ntimes; itime++){
@@ -96,6 +98,21 @@ void EmJetEventCount::CountEvents(long eventnumber,  int ntimes)
       }
     }
 
+    if( nJet_tag==1 ){// 1tag case
+      double afr4[3] = {-1.0, -1.0, -1.0};
+      double afr5[3] = {-1.0, -1.0, -1.0};
+      int ijet=0;
+      for(int ij=0; ij<4; ij++){
+        if( (*jet_isEmerging)[ij] ) continue;// skip the emerging jet
+        if (flavour[ij]<5 || flavour[ij]==21 || flavour[ij]==10 )  afr4[ijet] = vvfrcal_[1][itime].GetFakerate(nTrack[ij]);
+        else if(flavour[ij]==5 || flavour[ij]==19 ) afr4[ijet] = vvfrcal_[2][itime].GetFakerate(nTrack[ij]);
+        afr5[ijet] = vvfrcal_[6][itime].GetFakerate(nTrack[ij]);
+        ijet++;
+      }
+      vvn2tag_[4][itime] += P1tagTo2tag(afr4) * tweight_;
+      vvn2tag_[5][itime] += P1tagTo2tag(afr5) * tweight_;
+    }
+
     vvn2tag_[0][itime] += PnTag(afr0, 2) * tweight_;
     vvn2tag_[1][itime] += PnTag(afr1, 2) * tweight_;
     vvn2tag_[2][itime] += PnTag(afr2, 2) * tweight_;
@@ -104,12 +121,11 @@ void EmJetEventCount::CountEvents(long eventnumber,  int ntimes)
 
   histo_->hist1d["ht"]->Fill(ht, tweight_);
   histo_->hist1d["nJet_tag"]->Fill(nJet_tag, tweight_);
-  for(int ij=0; ij<4; ij++){
-    histo_->hist1d["jet_pt"]->Fill((*jet_pt)[ij], tweight_);
-    histo_->hist1d["jet_nTrack"]->Fill((*jet_nTrack)[ij], tweight_);
-  }
-
-  if( nJet_tag==2 ) n2tag_ += tweight_;
+  
+  //FillEventHistos("");
+  //if( nJet_tag==0 ) FillEventHistos("__0tag");
+  //else if( nJet_tag==1 ) FillEventHistos("__1tag");
+  //else if( nJet_tag==2 ) FillEventHistos("__2tag");
 }
 
 void EmJetEventCount::FillEventCountHistos(int ntimes)
@@ -120,7 +136,45 @@ void EmJetEventCount::FillEventCountHistos(int ntimes)
     histo_->hist1d["n2tag_1"]->Fill(vvn2tag_[1][itime]);
     histo_->hist1d["n2tag_2"]->Fill(vvn2tag_[2][itime]);
     histo_->hist1d["n2tag_3"]->Fill(vvn2tag_[3][itime]);
+    histo_->hist1d["n2tag_4"]->Fill(vvn2tag_[4][itime]);
+    histo_->hist1d["n2tag_5"]->Fill(vvn2tag_[5][itime]);
   }  
+}
+
+void EmJetEventCount::FillEventHistos(string tag)
+{
+  for(unsigned ij=0; ij<(*jet_pt).size(); ij++){
+    FillJetFlavourHistos(ij, tag);
+    if( (*jet_isEmerging)[ij] ){
+      FillJetFlavourHistos(ij, "__Emerging"+tag); 
+    }
+    else{
+      FillJetFlavourHistos(ij, "__Standard"+tag);
+    }
+  }
+}
+
+void EmJetEventCount::FillJetFlavourHistos(int ij, string tag)
+{
+  if( isData_ ){
+    std::cerr << "Error! Can not fill in flavour histograms on Data " << std::endl;
+    return;
+  }
+  FillJetHistos(ij, tag);
+  if( (*jet_flavour)[ij]==5 || (*jet_flavour)[ij]==19 ){
+    FillJetHistos(ij, "__B"+tag);
+  } 
+  else if( (*jet_flavour)[ij]<5 || (*jet_flavour)[ij]==21 ){
+    FillJetHistos(ij, "__L"+tag);
+  }
+}
+
+void EmJetEventCount::FillJetHistos(int ij, string tag)
+{
+  histo_->hist1d["jet_pt"+tag]->Fill((*jet_pt)[ij],   tweight_);
+  histo_->hist1d["jet_eta"+tag]->Fill((*jet_eta)[ij], tweight_);
+  histo_->hist1d["jet_phi"+tag]->Fill((*jet_phi)[ij], tweight_);
+  histo_->hist1d["jet_nTrack"+tag]->Fill((*jet_nTrack)[ij], tweight_);
 }
 
 void EmJetEventCount::PrintOutResults()
@@ -131,6 +185,8 @@ void EmJetEventCount::PrintOutResults()
   std::cout << "Total number of 2tag events predicted : " << vvn2tag_[1][0] << std::endl;
   std::cout << "Total number of 2tag events predicted : " << vvn2tag_[2][0] << std::endl;
   std::cout << "Total number of 2tag events predicted : " << vvn2tag_[3][0] << std::endl;
+  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[4][0] << std::endl;
+  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[5][0] << std::endl;
   std::cout << std::endl;
 }
 
@@ -217,7 +273,7 @@ void EmJetEventCount::PrepareFrCalVector(int ntimes)
 
 void EmJetEventCount::PrepareFrCalResults(int ntimes)
 { 
-  for(unsigned ifrcal=0; ifrcal < 4; ifrcal++){
+  for(unsigned ifrcal=0; ifrcal < 6; ifrcal++){
     vector<double> vn2tag_temp;
     for(int i=0; i<ntimes; i++){
       vn2tag_temp.push_back(0.); 

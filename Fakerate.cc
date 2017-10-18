@@ -83,6 +83,17 @@ double PnTag(double fr[], int nTag){
   return p_nTag;
 }
 
+// 
+// Calculate the probability/weight when predicting from 1-tag to 2-tag
+//
+double P1tagTo2tag(double fr[]){
+  double p1tagto2tag = 0;
+  p1tagto2tag  =   fr[0]   * (1-fr[1]) * (1-fr[2]);
+  p1tagto2tag += (1-fr[0]) *   fr[1]   * (1-fr[2]);
+  p1tagto2tag += (1-fr[0]) * (1-fr[1]) *   fr[2]  ;
+  return p1tagto2tag;
+}
+
 //
 // compute the probability/weight of ijet is tagged as emerging
 // in the nTag case(nTag = 0, 1, 2)

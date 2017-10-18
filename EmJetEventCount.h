@@ -47,7 +47,7 @@ class EmJetEventCount : protected BaseClass
     void SetOptions(string filename, const vector<string>& histoname, bool isData = false);
     //virtual int SetTree(string ifilename) = 0;
     SET_MEMBER_DEFAULT(MaxEntries, long, nentries_max, -1);
-    void LoopOverCurrentTree (int ntimes = 1);
+    void LoopOverTrees (int ntimes = 1);
 
   protected:
     TFile* ofile_;
@@ -70,8 +70,11 @@ class EmJetEventCount : protected BaseClass
     double n2tag_;
     int fcurrent_;     // index of the current tree in the tchain
     double tweight_;   // weight of the current tree in the tchain
-    void CountEvents(long eventnumber, int ntimes);
+    void LoopOverEvent(long eventnumber, int ntimes);
     void FillEventCountHistos(int ntimes);
+    void FillEventHistos(string tag);
+    void FillJetFlavourHistos(int ij, string tag);
+    void FillJetHistos(int ij, string tag);
     void PrintOutResults();
     double CalculateTreeWeight(int treenumber, long eventnumber);
     void PrepareNewTree();

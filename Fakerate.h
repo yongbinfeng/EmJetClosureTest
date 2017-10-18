@@ -30,6 +30,7 @@ class FrCal
 };
 
 double PnTag(double fr[], int nTag);
+double P1tagTo2tag(double fr[]);
 double PEmergingnTag(double fr[], int nTag, int ijet);
 double frCal(int jet_nTrack, int option);
 

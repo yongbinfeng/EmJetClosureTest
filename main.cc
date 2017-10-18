@@ -65,14 +65,14 @@ int main(int argc, char *argv[])
         std::cout << "file opened successfully "<< std::endl;
         //string ffr = "/data/users/fengyb/ClosureTest/TestClosure/FRHisto/result_fakerate.root";
         string ffr = ejsamplesColl.FrCalfile;
-        vector<string> vhfr = {"fakerate_QCD", "fakerate_QCD_L", "fakerate_QCD_B", "fakerate_GJet", "fakerate_GJet_L", "fakerate_GJet_B"};
+        vector<string> vhfr = {"fakerate_QCD", "fakerate_QCD_L", "fakerate_QCD_B", "fakerate_GJet", "fakerate_GJet_L", "fakerate_GJet_B", "fakerate_QCD_1to2"};
         // set basic info for closure test
         hm.SetOptions(ffr, vhfr, ejsamplesColl.isData);
         //for(int i=0; i<2; i++){
         //  std::cout << " running on " << i << " time " << std::endl;
-        //  hm.LoopOverCurrentTree();
+        //  hm.LoopOverTrees();
         //}
-        hm.LoopOverCurrentTree(repeatedTime);
+        hm.LoopOverTrees(repeatedTime);
         hm.WriteHistograms();
         std::cout << "--------------------------finished--------------------------------\n";
 
