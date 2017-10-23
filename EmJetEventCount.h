@@ -79,6 +79,7 @@ class EmJetEventCount : protected BaseClass
     void FillJetFlavourHistos(int ij, string tag, double weight);
     void FillJetHistos(int ij, string tag, double weight);
     void PrintOutResults();
+    void PrintResultwithError(const vector<double> &vresult);
     double CalculateTreeWeight(int treenumber, long eventnumber);
     void PrepareNewTree();
     void PrepareFrCalVector(int ntimes);

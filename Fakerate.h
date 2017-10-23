@@ -21,6 +21,7 @@ class FrCal
     ~FrCal() {};
     double GetFakerate(int nTrack) const;
     void SmearFrHisto(bool doprint=true);
+    void SmearHistoBy1Sigma(bool doprint, int sign);
     string GetHistoName();
     FrCal Clone(string histoname);
   private:

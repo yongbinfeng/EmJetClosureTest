@@ -27,6 +27,21 @@ void FrCal::SmearFrHisto(bool doprint)
   }
 }
 
+void FrCal::SmearHistoBy1Sigma(bool doprint, int sign)
+{
+  if( doprint ){
+    std::cout << "Start smearing the fakerate histogram " << histoname_ << " with Gaussian" << std::endl;
+  }
+  int Sign = sign/abs(sign);
+  for(int ibin = 1; ibin <= histo_->GetNbinsX(); ibin++){
+    double newval = histo_->GetBinContent(ibin) + Sign *histo_->GetBinError(ibin);
+    if( doprint ){
+      std::cout << " bin " << std::setw(2) << ibin << " gets smeared from " << std::setw(12) << histo_->GetBinContent(ibin) << " +/- "<< std::setw(14) << std::left << histo_->GetBinError(ibin) << " to " << std::setw(15) << std::left << newval << std::endl;
+    }
+    histo_->SetBinContent(ibin, newval);
+  } 
+}
+
 FrCal FrCal::Clone(string histoname)
 {
   FrCal ofr;

@@ -115,11 +115,11 @@ void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
       vvn2tag_[5][itime] += P1tagTo2tag(afr5) * tweight_;
       vvn2tag_[6][itime] += P1tagTo2tag(afr6) * tweight_;
 
-      FillClosureTestHistos1To2Tag(afr5, "__QCDPredicted1To2Tag");
-      FillClosureTestHistos1To2Tag(afr6, "__GJetPredicted1To2Tag");
+      if( itime==0 ) FillClosureTestHistos1To2Tag(afr5, "__QCDPredicted1To2Tag");
+      if( itime==0 ) FillClosureTestHistos1To2Tag(afr6, "__GJetPredicted1To2Tag");
     }
 
-    FillClosureTestHistos0To2Tag(afr1);
+    if( itime==0 ) FillClosureTestHistos0To2Tag(afr1);
 
     vvn2tag_[0][itime] += PnTag(afr0, 2) * tweight_;
     vvn2tag_[1][itime] += PnTag(afr1, 2) * tweight_;
@@ -130,10 +130,10 @@ void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
   //histo_->hist1d["ht"]->Fill(ht, tweight_);
   histo_->hist1d["nJet_tag"]->Fill(nJet_tag, tweight_);
   
-  FillEventHistos("");
-  if( nJet_tag==0 ) FillEventHistos("__0tag");
-  if( nJet_tag==1 ) FillEventHistos("__1tag");
-  if( nJet_tag==2 ) FillEventHistos("__2tag");
+  //FillEventHistos("");
+  //if( nJet_tag==0 ) FillEventHistos("__0tag");
+  //if( nJet_tag==1 ) FillEventHistos("__1tag");
+  //if( nJet_tag==2 ) FillEventHistos("__2tag");
 }
 
 void EmJetEventCount::FillEventCountHistos(int ntimes)
@@ -235,14 +235,19 @@ void EmJetEventCount::PrintOutResults()
 {
   std::cout << "Total number of processed events is : "<< TotalEvents_ << std::endl;
   std::cout << "Total number of 2tag events observed:   " << n2tag_         << std::endl;
-  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[0][0] << std::endl;
-  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[1][0] << std::endl;
-  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[2][0] << std::endl;
-  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[3][0] << std::endl;
-  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[4][0] << std::endl;
-  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[5][0] << std::endl;
-  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[6][0] << std::endl;
+  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[0]);
+  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[1]);
+  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[2]);
+  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[3]);
+  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[4]);
+  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[5]);
+  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[6]);
   std::cout << std::endl;
+}
+
+void EmJetEventCount::PrintResultwithError(const vector<double> &vresult)
+{
+  std::cout << " " << vresult[0] << "+" << vresult[1]-vresult[0] << "-"<< vresult[0]-vresult[2] << std::endl; 
 }
 
 void EmJetEventCount::OpenOutputFile(string ofilename)
@@ -317,7 +322,9 @@ void EmJetEventCount::PrepareFrCalVector(int ntimes)
       // smear the FR histograms, leaving the first one as the original
       //  print out the smeared results for the first 10 histograms
       if( i!=0 ){
-        if( i<10 ) fr_temp.SmearFrHisto(true);
+        if( i==1 ) fr_temp.SmearHistoBy1Sigma(true, 1);
+        else if( i==2 ) fr_temp.SmearHistoBy1Sigma(true, -1);
+        //if( i<10 ) fr_temp.SmearFrHisto(true);
         else       fr_temp.SmearFrHisto(false);
       }
       vfrcal_temp.push_back(fr_temp);
