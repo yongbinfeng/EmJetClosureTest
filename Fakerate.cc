@@ -91,7 +91,7 @@ double P1tagTo2tag(double fr[]){
   p1tagto2tag  =   fr[0]   * (1-fr[1]) * (1-fr[2]);
   p1tagto2tag += (1-fr[0]) *   fr[1]   * (1-fr[2]);
   p1tagto2tag += (1-fr[0]) * (1-fr[1]) *   fr[2]  ;
-  return p1tagto2tag;
+  return p1tagto2tag/2.0;
 }
 
 //
@@ -128,6 +128,23 @@ double PEmergingnTag(double fr[], int nTag, int ijet){
     std::cout << " Error/DEBUG: probability calculation problem !!! " << std::endl;
   }
   return prob;
+}
+
+//
+// compuute the probability/weight of ijet is tagged as emerging
+// when predicting from 1tag to 2tag
+//
+double PEmerging1tagTo2tag(double fr[], int ijet){
+  if( ijet>=3 ) {
+    std::cerr<< " Error: input jet index problem !!!" << std::endl;
+    return -1;
+  }
+  double prob = fr[ijet];
+  for(int ij=0; ij<3; ij++){
+    if( ij==ijet ) continue;
+    prob *= (1-fr[ij]);
+  } 
+  return prob/2.0;
 }
 
 double frCal(int jet_nTrack, int option){

@@ -101,17 +101,25 @@ void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
     if( nJet_tag==1 ){// 1tag case
       double afr4[3] = {-1.0, -1.0, -1.0};
       double afr5[3] = {-1.0, -1.0, -1.0};
+      double afr6[3] = {-1.0, -1.0, -1.0};
       int ijet=0;
       for(int ij=0; ij<4; ij++){
         if( (*jet_isEmerging)[ij] ) continue;// skip the emerging jet
         if (flavour[ij]<5 || flavour[ij]==21 || flavour[ij]==10 )  afr4[ijet] = vvfrcal_[1][itime].GetFakerate(nTrack[ij]);
         else if(flavour[ij]==5 || flavour[ij]==19 ) afr4[ijet] = vvfrcal_[2][itime].GetFakerate(nTrack[ij]);
         afr5[ijet] = vvfrcal_[6][itime].GetFakerate(nTrack[ij]);
+        afr6[ijet] = vvfrcal_[7][itime].GetFakerate(nTrack[ij]);
         ijet++;
       }
       vvn2tag_[4][itime] += P1tagTo2tag(afr4) * tweight_;
       vvn2tag_[5][itime] += P1tagTo2tag(afr5) * tweight_;
+      vvn2tag_[6][itime] += P1tagTo2tag(afr6) * tweight_;
+
+      FillClosureTestHistos1To2Tag(afr5, "__QCDPredicted1To2Tag");
+      FillClosureTestHistos1To2Tag(afr6, "__GJetPredicted1To2Tag");
     }
+
+    FillClosureTestHistos0To2Tag(afr1);
 
     vvn2tag_[0][itime] += PnTag(afr0, 2) * tweight_;
     vvn2tag_[1][itime] += PnTag(afr1, 2) * tweight_;
@@ -119,13 +127,13 @@ void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
     vvn2tag_[3][itime] += PnTag(afr3, 2) * tweight_;
   }
 
-  histo_->hist1d["ht"]->Fill(ht, tweight_);
+  //histo_->hist1d["ht"]->Fill(ht, tweight_);
   histo_->hist1d["nJet_tag"]->Fill(nJet_tag, tweight_);
   
-  //FillEventHistos("");
-  //if( nJet_tag==0 ) FillEventHistos("__0tag");
-  //else if( nJet_tag==1 ) FillEventHistos("__1tag");
-  //else if( nJet_tag==2 ) FillEventHistos("__2tag");
+  FillEventHistos("");
+  if( nJet_tag==0 ) FillEventHistos("__0tag");
+  if( nJet_tag==1 ) FillEventHistos("__1tag");
+  if( nJet_tag==2 ) FillEventHistos("__2tag");
 }
 
 void EmJetEventCount::FillEventCountHistos(int ntimes)
@@ -138,43 +146,89 @@ void EmJetEventCount::FillEventCountHistos(int ntimes)
     histo_->hist1d["n2tag_3"]->Fill(vvn2tag_[3][itime]);
     histo_->hist1d["n2tag_4"]->Fill(vvn2tag_[4][itime]);
     histo_->hist1d["n2tag_5"]->Fill(vvn2tag_[5][itime]);
+    histo_->hist1d["n2tag_6"]->Fill(vvn2tag_[6][itime]);
   }  
+}
+
+void EmJetEventCount::FillClosureTestHistos0To2Tag(double fr[])
+{
+  double ht4=0;
+  for(unsigned ij=0; ij<(*jet_pt).size(); ij++){
+    ht4 += (*jet_pt)[ij];
+    double pem = PEmergingnTag(fr, 2, ij);// probability of jet ij tagged as emerging
+    FillJetHistos(ij, "__Predicted0To2Tag", tweight_*pem);
+  }
+  double prob = PnTag(fr, 2);  // probability of having 2 tags
+  histo_->hist1d["ht__Predicted0To2Tag"]->Fill(ht4, tweight_*prob);
+}
+
+void EmJetEventCount::FillClosureTestHistos1To2Tag(double fr[], string tag)
+{
+  double ht4=0;
+  double prob = P1tagTo2tag(fr);  // probability of having 2 tags
+  double test = 0;
+  int iemj = 0;
+  for(unsigned ij=0; ij<(*jet_pt).size(); ij++){
+    ht4 += (*jet_pt)[ij];
+    if( (*jet_isEmerging)[ij] ){
+      FillJetHistos(ij, "__Emerging"+tag, tweight_*prob);
+     iemj = 1;
+    }
+    else{
+      double pem = PEmerging1tagTo2tag(fr, ij-iemj);// probability of jet ij tagged as emerging
+      FillJetHistos(ij, "__Emerging"+tag, tweight_*pem);
+      test += pem;
+    }
+  }
+  if( fabs(test-prob)>1e-7 ) std::cout << " inconsistent prob: " << prob << " test "<< test << std::endl;
+  histo_->hist1d["ht"+tag]->Fill(ht4, tweight_*prob);
+}
+
+void EmJetEventCount::FillEventHistos(string tag, double weight)
+{
+  double ht4=0;
+  for(unsigned ij=0; ij<(*jet_pt).size(); ij++){
+    ht4 += (*jet_pt)[ij];
+    FillJetFlavourHistos(ij, tag, weight);
+    if( (*jet_isEmerging)[ij] ){
+      FillJetFlavourHistos(ij, "__Emerging"+tag, weight); 
+    }
+    else{
+      FillJetFlavourHistos(ij, "__Standard"+tag, weight);
+    }
+  }
+  histo_->hist1d["ht"+tag]->Fill(ht4, weight);
 }
 
 void EmJetEventCount::FillEventHistos(string tag)
 {
-  for(unsigned ij=0; ij<(*jet_pt).size(); ij++){
-    FillJetFlavourHistos(ij, tag);
-    if( (*jet_isEmerging)[ij] ){
-      FillJetFlavourHistos(ij, "__Emerging"+tag); 
-    }
-    else{
-      FillJetFlavourHistos(ij, "__Standard"+tag);
-    }
-  }
+  double weight = tweight_;
+  FillEventHistos(tag, weight);
 }
 
-void EmJetEventCount::FillJetFlavourHistos(int ij, string tag)
+void EmJetEventCount::FillJetFlavourHistos(int ij, string tag, double weight)
 {
   if( isData_ ){
     std::cerr << "Error! Can not fill in flavour histograms on Data " << std::endl;
     return;
   }
-  FillJetHistos(ij, tag);
+  FillJetHistos(ij, tag, weight);
+  /*
   if( (*jet_flavour)[ij]==5 || (*jet_flavour)[ij]==19 ){
-    FillJetHistos(ij, "__B"+tag);
+    FillJetHistos(ij, "__B"+tag, weight);
   } 
   else if( (*jet_flavour)[ij]<5 || (*jet_flavour)[ij]==21 ){
-    FillJetHistos(ij, "__L"+tag);
+    FillJetHistos(ij, "__L"+tag, weight);
   }
+  */
 }
 
-void EmJetEventCount::FillJetHistos(int ij, string tag)
+void EmJetEventCount::FillJetHistos(int ij, string tag, double weight)
 {
-  histo_->hist1d["jet_pt"+tag]->Fill((*jet_pt)[ij],   tweight_);
-  histo_->hist1d["jet_eta"+tag]->Fill((*jet_eta)[ij], tweight_);
-  histo_->hist1d["jet_phi"+tag]->Fill((*jet_phi)[ij], tweight_);
-  histo_->hist1d["jet_nTrack"+tag]->Fill((*jet_nTrack)[ij], tweight_);
+  histo_->hist1d["jet_pt"+tag]->Fill((*jet_pt)[ij],   weight);
+  histo_->hist1d["jet_eta"+tag]->Fill((*jet_eta)[ij], weight);
+  histo_->hist1d["jet_phi"+tag]->Fill((*jet_phi)[ij], weight);
+  histo_->hist1d["jet_nTrack"+tag]->Fill((*jet_nTrack)[ij], weight);
 }
 
 void EmJetEventCount::PrintOutResults()
@@ -187,6 +241,7 @@ void EmJetEventCount::PrintOutResults()
   std::cout << "Total number of 2tag events predicted : " << vvn2tag_[3][0] << std::endl;
   std::cout << "Total number of 2tag events predicted : " << vvn2tag_[4][0] << std::endl;
   std::cout << "Total number of 2tag events predicted : " << vvn2tag_[5][0] << std::endl;
+  std::cout << "Total number of 2tag events predicted : " << vvn2tag_[6][0] << std::endl;
   std::cout << std::endl;
 }
 
@@ -273,7 +328,7 @@ void EmJetEventCount::PrepareFrCalVector(int ntimes)
 
 void EmJetEventCount::PrepareFrCalResults(int ntimes)
 { 
-  for(unsigned ifrcal=0; ifrcal < 6; ifrcal++){
+  for(unsigned ifrcal=0; ifrcal < 7; ifrcal++){
     vector<double> vn2tag_temp;
     for(int i=0; i<ntimes; i++){
       vn2tag_temp.push_back(0.); 

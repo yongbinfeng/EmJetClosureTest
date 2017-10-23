@@ -42,6 +42,7 @@ def user_define_histos():
     name = 'n2tag_3'                   ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
     name = 'n2tag_4'                   ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
     name = 'n2tag_5'                   ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
+    name = 'n2tag_6'                   ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
 
     # Jet plot variations
     histo_clone_dict = OrderedDict()
@@ -62,12 +63,18 @@ def user_define_histos():
     histo_dict.update(histo_clone_dict)
 
     for name, histo in histo_dict.iteritems():
-        if name[:4]=='jet_':
+        if name[:4]=='jet_' or name[:2]=='ht':
             histo_clone = clone_object(histo, postfix='0tag')
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='1tag')
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='2tag')
+            histo_clone_dict[histo_clone.name] = histo_clone
+            histo_clone = clone_object(histo, postfix='Predicted0To2Tag')
+            histo_clone_dict[histo_clone.name] = histo_clone
+            histo_clone = clone_object(histo, postfix='QCDPredicted1To2Tag')
+            histo_clone_dict[histo_clone.name] = histo_clone
+            histo_clone = clone_object(histo, postfix='GJetPredicted1To2Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
     histo_dict.update(histo_clone_dict)
 
