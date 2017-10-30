@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
         std::cout << "file opened successfully "<< std::endl;
         //string ffr = "/data/users/fengyb/ClosureTest/TestClosure/FRHisto/result_fakerate.root";
         string ffr = ejsamplesColl.FrCalfile;
-        vector<string> vhfr = {"fakerate_QCD", "fakerate_QCD_L", "fakerate_QCD_B", "fakerate_GJet", "fakerate_GJet_L", "fakerate_GJet_B", "FR_l_calc", "FR_b_calc"};
+        vector<string> vhfr = {"fakerate_QCDMC_ptX", "fakerate_QCDMC_ptX_Lquark", "fakerate_QCDMC_ptX_Bquark", "fakerate_GJetMC_ptX", "fakerate_GJetMC_ptX_Lquark", "fakerate_GJetMC_ptX_Bquark", "FR_l_calc", "FR_b_calc"};
         //vector<string> vhfr = {"fakerate_QCD", "fakerate_QCD_L", "fakerate_QCD_B", "fakerate_GJet", "fakerate_GJet_L", "fakerate_GJet_B", "fakerate_GJet_L", "fakerate_GJet_B"};
         // set basic info for closure test
         hm.SetOptions(ffr, vhfr, ejsamplesColl.isData);
