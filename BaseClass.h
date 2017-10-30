@@ -36,6 +36,7 @@ public :
    vector<float>   *jet_eta;
    vector<float>   *jet_phi;
    vector<int>     *jet_nTrack;
+   vector<int>     *jet_nTrackPostCut;
    vector<int>     *jet_flavour;
    vector<float>   *jet_Alpha3DSig;
    vector<float>   *jet_medianIP;
@@ -53,6 +54,7 @@ public :
    TBranch        *b_jet_eta;   //!
    TBranch        *b_jet_phi;   //!
    TBranch        *b_jet_nTrack;   //!
+   TBranch        *b_jet_nTrackPostCut; //!
    TBranch        *b_jet_flavour;   //!
    TBranch        *b_jet_Alpha3DSig;   //!
    TBranch        *b_jet_medianIP;   //!
@@ -118,6 +120,7 @@ void BaseClass::Init(TTree *tree)
    jet_eta = 0;
    jet_phi = 0;
    jet_nTrack = 0;
+   jet_nTrackPostCut = 0;
    jet_flavour = 0;
    jet_Alpha3DSig = 0;
    jet_medianIP = 0;
@@ -139,6 +142,7 @@ void BaseClass::Init(TTree *tree)
    fChain->SetBranchAddress("jet_eta", &jet_eta, &b_jet_eta);
    fChain->SetBranchAddress("jet_phi", &jet_phi, &b_jet_phi);
    fChain->SetBranchAddress("jet_nTrack", &jet_nTrack, &b_jet_nTrack);
+   fChain->SetBranchAddress("jet_nTrackPostCut", &jet_nTrackPostCut, &b_jet_nTrackPostCut);
    fChain->SetBranchAddress("jet_flavour", &jet_flavour, &b_jet_flavour);
    fChain->SetBranchAddress("jet_Alpha3DSig", &jet_Alpha3DSig, &b_jet_Alpha3DSig);
    fChain->SetBranchAddress("jet_medianIP", &jet_medianIP, &b_jet_medianIP);

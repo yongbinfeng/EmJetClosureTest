@@ -1,0 +1,6 @@
+# sample name         , xsec[fb] ,    root file
+QCDHT500To700         , 32100000 ,   /data/users/fengyb/80Xresult/sntuples_QCD-testOct16_100mm/ntuple_QCDHT500To700.root
+QCDHT700To1000        ,  6831000 ,   /data/users/fengyb/80Xresult/sntuples_QCD-testOct16_100mm/ntuple_QCDHT700To1000.root
+QCDHT1000To1500       ,  1207000 ,   /data/users/fengyb/80Xresult/sntuples_QCD-testOct16_100mm/ntuple_QCDHT1000To1500.root
+CDHT1500To2000        ,   119900 ,   /data/users/fengyb/80Xresult/sntuples_QCD-testOct16_100mm/ntuple_QCDHT1500To2000.root
+QCDHT2000ToInf        ,    25240 ,   /data/users/fengyb/80Xresult/sntuples_QCD-testOct16_100mm/ntuple_QCDHT2000ToInf.root

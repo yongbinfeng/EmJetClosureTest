@@ -64,15 +64,17 @@ class EmJetEventCount : protected BaseClass
     bool isData_;
     vector<FrCal> vfrcal_; // vector of FrCal from input FR histograms
     vector<vector<FrCal>> vvfrcal_; // vector of smeared vector<FrCal> vfrcal_
+    vector<vector<double>> vvn1tag_;
     vector<vector<double>> vvn2tag_; 
     vector<double> vtreexsec_;
     long TotalEvents_;
+    double n1tag_;
     double n2tag_;
     int fcurrent_;     // index of the current tree in the tchain
     double tweight_;   // weight of the current tree in the tchain
     void LoopOverEvent(long eventnumber, int ntimes);
     void FillEventCountHistos(int ntimes);
-    void FillClosureTestHistos0To2Tag(double fr[]);
+    void FillClosureTestHistos0To2Tag(double fr[], string tag);
     void FillClosureTestHistos1To2Tag(double fr[], string tag);
     void FillEventHistos(string tag, double weight);
     void FillEventHistos(string tag);
