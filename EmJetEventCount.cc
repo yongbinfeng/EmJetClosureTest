@@ -249,7 +249,7 @@ void EmJetEventCount::PrintOutResults()
 {
   std::cout << "Total number of processed events is : "<< TotalEvents_ << std::endl;
   std::cout << "Total number of 2tag events observed:   " << n2tag_         << std::endl;
-  std::cout << "Total number of 2tag events observed:   " << histo_->hist1d["nJet_tag"]->GetBinContent(3) << std::endl;
+  std::cout << "Total number of 2tag events observed:   " << histo_->hist1d["nJet_tag"]->GetBinContent(3) << "+/-" << histo_->hist1d["nJet_tag"]->GetBinError(3)<< std::endl;
   std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[0]);
   std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[1]);
   std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[2]);
@@ -259,7 +259,7 @@ void EmJetEventCount::PrintOutResults()
   std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[6]);
   std::cout << "------------------------------------------------" << std::endl;
   std::cout << "Total number of 1tag events observed:  "  << n1tag_         << std::endl;
-  std::cout << "Total numebr of 1tag events observed:  "  << histo_->hist1d["nJet_tag"]->GetBinContent(2) << std::endl;
+  std::cout << "Total numebr of 1tag events observed:  "  << histo_->hist1d["nJet_tag"]->GetBinContent(2)  << "+/-"<< histo_->hist1d["nJet_tag"]->GetBinError(2)<< std::endl;
   std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[0]);
   std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[1]);
   std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[2]);
