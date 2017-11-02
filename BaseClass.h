@@ -41,6 +41,7 @@ public :
    vector<float>   *jet_Alpha3DSig;
    vector<float>   *jet_medianIP;
    vector<float>   *jet_theta2D;
+   vector<float>   *jet_csv;
    vector<bool>    *jet_isEmerging;
 
    // List of branches
@@ -59,6 +60,7 @@ public :
    TBranch        *b_jet_Alpha3DSig;   //!
    TBranch        *b_jet_medianIP;   //!
    TBranch        *b_jet_theta2D;   //!
+   TBranch        *b_jet_csv;       //!
    TBranch        *b_jet_isEmerging;   //!
 
    BaseClass(TTree *tree=0);
@@ -125,6 +127,7 @@ void BaseClass::Init(TTree *tree)
    jet_Alpha3DSig = 0;
    jet_medianIP = 0;
    jet_theta2D = 0;
+   jet_csv = 0;
    jet_isEmerging = 0;
    // Set branch addresses and branch pointers
    if (!tree) return;
@@ -147,6 +150,7 @@ void BaseClass::Init(TTree *tree)
    fChain->SetBranchAddress("jet_Alpha3DSig", &jet_Alpha3DSig, &b_jet_Alpha3DSig);
    fChain->SetBranchAddress("jet_medianIP", &jet_medianIP, &b_jet_medianIP);
    fChain->SetBranchAddress("jet_theta2D", &jet_theta2D, &b_jet_theta2D);
+   fChain->SetBranchAddress("jet_csv", &jet_csv, &b_jet_csv);
    fChain->SetBranchAddress("jet_isEmerging", &jet_isEmerging, &b_jet_isEmerging);
    Notify();
 }

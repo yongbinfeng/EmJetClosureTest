@@ -65,8 +65,9 @@ int main(int argc, char *argv[])
         std::cout << "file opened successfully "<< std::endl;
         //string ffr = "/data/users/fengyb/ClosureTest/TestClosure/FRHisto/result_fakerate.root";
         string ffr = ejsamplesColl.FrCalfile;
-        vector<string> vhfr = {"fakerate_QCDMC_ptX", "fakerate_QCDMC_ptX_Lquark", "fakerate_QCDMC_ptX_Bquark", "fakerate_GJetMC_ptX", "fakerate_GJetMC_ptX_Lquark", "fakerate_GJetMC_ptX_Bquark", "FR_l_calc", "FR_b_calc"};
-        //vector<string> vhfr = {"fakerate_QCD", "fakerate_QCD_L", "fakerate_QCD_B", "fakerate_GJet", "fakerate_GJet_L", "fakerate_GJet_B", "fakerate_GJet_L", "fakerate_GJet_B"};
+        //vector<string> vhfr = {"fakerate_QCDMC_ptX", "fakerate_QCDMC_ptX_Lquark", "fakerate_QCDMC_ptX_Bquark", "fakerate_GJetMC_ptX", "fakerate_GJetMC_ptX_Lquark", "fakerate_GJetMC_ptX_Bquark", "FR_l_calc", "FR_b_calc", "fakerate_GJetMC_calc_1to2tag", "fakerate_QCDMC_truth_1to2tag"};
+        //vector<string> vhfr = {"fakerate_QCDMC_ptX", "fakerate_QCDMC_ptX_Lquark", "fakerate_QCDMC_ptX_Bquark", "fakerate_GJetMC_ptX", "fakerate_GJetMC_ptX_Lquark", "fakerate_GJetMC_ptX_Bquark", "FR_l_calc", "FR_b_calc"};
+        vector<string> vhfr = {"fakerate_QCDMC_ptX", "fakerate_QCDMC_ptX_Lquark", "fakerate_QCDMC_ptX_Bquark", "fakerate_GJetData_ptX", "fakerate_GJetMC_ptX_Lquark", "fakerate_GJetMC_ptX_Bquark", "FR_l_calc", "FR_b_calc", "fakerate_GJetData_calc_1to2tag", "fakerate_QCDMC_truth_1to2tag", "fakerate_GJetData_calc_0to1tag"};
         // set basic info for closure test
         hm.SetOptions(ffr, vhfr, ejsamplesColl.isData);
         //for(int i=0; i<2; i++){

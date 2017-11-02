@@ -73,6 +73,7 @@ void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
     nTrack[ij] = (*jet_nTrackPostCut)[ij];
     flavour[ij] = (*jet_flavour)[ij];
     if( (*jet_isEmerging)[ij] ) nJet_tag++;
+    //if( (*jet_Alpha3DSig)[ij]<0.45 && (*jet_medianIP)[ij]>0.05 ) nJet_tag++;
   }
 
   if( nJet_tag==1 ) n1tag_ += tweight_;
@@ -88,7 +89,7 @@ void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
     double afr4[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet inverted fakerates
    
     for(int ij=0; ij<4; ij++){
-      afr0[ij] = vvfrcal_[0][itime].GetFakerate(nTrack[ij]); // QCD overall
+      afr0[ij] = vvfrcal_[10][itime].GetFakerate(nTrack[ij]); // QCD overall
       afr2[ij] = vvfrcal_[3][itime].GetFakerate(nTrack[ij]); // GJet overall
       if (flavour[ij]<5 || flavour[ij]==21 || flavour[ij]==10 ){
         afr1[ij] = vvfrcal_[1][itime].GetFakerate(nTrack[ij]); // QCD light
@@ -101,29 +102,27 @@ void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
         afr4[ij] = vvfrcal_[7][itime].GetFakerate(nTrack[ij]); // GJet inverted B calc
       }
     }
-  
-    /*
+
     if( nJet_tag==1 ){// 1tag case
-      double afr4[3] = {-1.0, -1.0, -1.0};
       double afr5[3] = {-1.0, -1.0, -1.0};
       double afr6[3] = {-1.0, -1.0, -1.0};
+      double afr7[3] = {-1.0, -1.0, -1.0};
       int ijet=0;
       for(int ij=0; ij<4; ij++){
         if( (*jet_isEmerging)[ij] ) continue;// skip the emerging jet
-        if (flavour[ij]<5 || flavour[ij]==21 || flavour[ij]==10 )  afr4[ijet] = vvfrcal_[1][itime].GetFakerate(nTrack[ij]);
-        else if(flavour[ij]==5 || flavour[ij]==19 ) afr4[ijet] = vvfrcal_[2][itime].GetFakerate(nTrack[ij]);
-        afr5[ijet] = vvfrcal_[6][itime].GetFakerate(nTrack[ij]);
-        afr6[ijet] = vvfrcal_[7][itime].GetFakerate(nTrack[ij]);
+        if (flavour[ij]<5 || flavour[ij]==21 || flavour[ij]==10 )  afr5[ijet] = vvfrcal_[1][itime].GetFakerate(nTrack[ij]);
+        else if(flavour[ij]==5 || flavour[ij]==19 ) afr5[ijet] = vvfrcal_[2][itime].GetFakerate(nTrack[ij]);
+        afr6[ijet] = vvfrcal_[8][itime].GetFakerate(nTrack[ij]);
+        afr7[ijet] = vvfrcal_[9][itime].GetFakerate(nTrack[ij]);
         ijet++;
       }
-      vvn2tag_[4][itime] += P1tagTo2tag(afr4) * tweight_;
       vvn2tag_[5][itime] += P1tagTo2tag(afr5) * tweight_;
       vvn2tag_[6][itime] += P1tagTo2tag(afr6) * tweight_;
+      vvn2tag_[7][itime] += P1tagTo2tag(afr7) * tweight_;
 
-      if( itime==0 ) FillClosureTestHistos1To2Tag(afr5, "__QCDPredicted1To2Tag");
+      //if( itime==0 ) FillClosureTestHistos1To2Tag(afr5, "__QCDPredicted1To2Tag");
       if( itime==0 ) FillClosureTestHistos1To2Tag(afr6, "__GJetPredicted1To2Tag");
     }
-    */
 
     //if( itime==0 ) FillClosureTestHistos0To2Tag(afr1, "__withQCDflavour");
     //if( itime==0 ) FillClosureTestHistos0To2Tag(afr3, "__withGJetflavour");
@@ -145,7 +144,7 @@ void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
   //histo_->hist1d["ht"]->Fill(ht, tweight_);
   histo_->hist1d["nJet_tag"]->Fill(nJet_tag, tweight_);
   
-  FillEventHistos("");
+  //FillEventHistos("");
   //if( nJet_tag==0 ) FillEventHistos("__0tag");
   //if( nJet_tag==1 ) FillEventHistos("__1tag");
   //if( nJet_tag==2 ) FillEventHistos("__2tag");
@@ -206,6 +205,7 @@ void EmJetEventCount::FillEventHistos(string tag, double weight)
     ht4 += (*jet_pt)[ij];
     FillJetFlavourHistos(ij, tag, weight);
     if( (*jet_isEmerging)[ij] ){
+    //if( (*jet_Alpha3DSig)[ij]<0.45 && (*jet_medianIP)[ij]>0.05 ){
       FillJetFlavourHistos(ij, "__Emerging"+tag, weight); 
     }
     else{
@@ -223,16 +223,14 @@ void EmJetEventCount::FillEventHistos(string tag)
 
 void EmJetEventCount::FillJetFlavourHistos(int ij, string tag, double weight)
 {
-  if( isData_ ){
-    std::cerr << "Error! Can not fill in flavour histograms on Data " << std::endl;
-    return;
-  }
   FillJetHistos(ij, tag, weight);
-  if( (*jet_flavour)[ij]==5 || (*jet_flavour)[ij]==19 ){
-    FillJetHistos(ij, "__B"+tag, weight);
-  } 
-  else if( (*jet_flavour)[ij]<5 || (*jet_flavour)[ij]==21 ){
-    FillJetHistos(ij, "__L"+tag, weight);
+  if( !isData_ ){
+    if( (*jet_flavour)[ij]==5 || (*jet_flavour)[ij]==19 ){
+      FillJetHistos(ij, "__B"+tag, weight);
+    } 
+    else if( (*jet_flavour)[ij]<5 || (*jet_flavour)[ij]==21 ){
+      FillJetHistos(ij, "__L"+tag, weight);
+    }
   }
 }
 
@@ -243,6 +241,7 @@ void EmJetEventCount::FillJetHistos(int ij, string tag, double weight)
   histo_->hist1d["jet_phi"+tag]->Fill((*jet_phi)[ij], weight);
   histo_->hist1d["jet_nTrack"+tag]->Fill((*jet_nTrack)[ij], weight);
   histo_->hist1d["jet_nTrackPostCut"+tag]->Fill((*jet_nTrackPostCut)[ij], weight);
+  histo_->hist1d["jet_csv"+tag]->Fill((*jet_csv)[ij], weight);
 }
 
 void EmJetEventCount::PrintOutResults()
@@ -257,6 +256,7 @@ void EmJetEventCount::PrintOutResults()
   std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[4]);
   std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[5]);
   std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[6]);
+  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[7]);
   std::cout << "------------------------------------------------" << std::endl;
   std::cout << "Total number of 1tag events observed:  "  << n1tag_         << std::endl;
   std::cout << "Total numebr of 1tag events observed:  "  << histo_->hist1d["nJet_tag"]->GetBinContent(2)  << "+/-"<< histo_->hist1d["nJet_tag"]->GetBinError(2)<< std::endl;
@@ -324,8 +324,10 @@ double EmJetEventCount::CalculateTreeWeight(int treenumber, long eventCount)
 {
   const double lumi = 20.0;
   double weight = 1.0;
-  if( treenumber < static_cast<int>(vtreexsec_.size()) ){
-    weight = lumi * vtreexsec_[treenumber] / eventCount;
+  if( !isData_ ){ // Normalize for Monte Carlo
+    if( treenumber < static_cast<int>(vtreexsec_.size()) ){
+      weight = lumi * vtreexsec_[treenumber] / eventCount;
+    }
   }
   return weight;
 }
@@ -363,7 +365,7 @@ void EmJetEventCount::PrepareFrCalVector(int ntimes)
 
 void EmJetEventCount::PrepareFrCalResults(int ntimes)
 { 
-  for(unsigned ifrcal=0; ifrcal < 7; ifrcal++){
+  for(unsigned ifrcal=0; ifrcal < 8; ifrcal++){
     vector<double> vinit;
     for(int i=0; i<ntimes; i++){
       vinit.push_back(0.); 

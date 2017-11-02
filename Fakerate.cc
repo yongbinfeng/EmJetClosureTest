@@ -73,6 +73,10 @@ string FrCal::GetHistoName()
 // calculate the probability/weight of one event with fr[4] and nTags
 //
 double PnTag(double fr[], int nTag){
+  if( fr[0]<0.0 || fr[1]<0.0 || fr[2]<0.0 || fr[3]<0.0 ){
+    std::cerr << "Error! Fakerate arrays not calculated correctly" << std::endl;
+    return 0.0;
+  }
   double p_nTag = 0;
   if( nTag == 0){
     p_nTag = (1-fr[0]) * (1-fr[1]) * (1-fr[2]) * (1-fr[3]);
@@ -118,7 +122,10 @@ double PEmergingnTag(double fr[], int nTag, int ijet){
     std::cout << " Error: jet index out when calculating Emerging probability" << std::endl; 
     return 0;
   }
-
+  if( fr[0]<0.0 || fr[1]<0.0 || fr[2]<0.0 || fr[3]<0.0 ){
+    std::cerr << "Error! Fakerate arrays not calculated correctly" << std::endl;
+    return 0.0;
+  }
   double prob = 0.0;
   if ( nTag==1 ) {
     prob = fr[ijet];
