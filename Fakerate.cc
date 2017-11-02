@@ -12,19 +12,16 @@ FrCal::FrCal(string filename, string histoname)
   nbins_ = histo_->GetNbinsX();
 }
 
+FrCal::FrCal(TH1F* hfr)
+{
+  histo_ = hfr;
+  histoname_ = hfr->GetName();
+  nbins_ = histo_->GetNbinsX();
+}
+
 void FrCal::SmearFrHisto(bool doprint)
 {
-  if( doprint ){
-    std::cout << "Start smearing the fakerate histogram " << histoname_ << " with Gaussian" << std::endl; 
-  }
-  gRandom = new TRandom3(0);
-  for(int ibin = 1; ibin <= histo_->GetNbinsX(); ibin++){
-    double newval = gRandom->Gaus( histo_->GetBinContent(ibin), histo_->GetBinError(ibin));
-    if( doprint ){
-      std::cout << " bin " << std::setw(2) << ibin << " gets smeared from " << std::setw(12) << histo_->GetBinContent(ibin) << " +/- "<< std::setw(14) << std::left << histo_->GetBinError(ibin) << " to " << std::setw(15) << std::left << newval << std::endl;
-    }
-    histo_->SetBinContent(ibin, newval);
-  }
+  SmearHisto(histo_, doprint);
 }
 
 void FrCal::SmearHistoBy1Sigma(bool doprint, int sign)
@@ -38,7 +35,7 @@ void FrCal::SmearHistoBy1Sigma(bool doprint, int sign)
     if( doprint ){
       std::cout << " bin " << std::setw(2) << ibin << " gets smeared from " << std::setw(12) << histo_->GetBinContent(ibin) << " +/- "<< std::setw(14) << std::left << histo_->GetBinError(ibin) << " to " << std::setw(15) << std::left << newval << std::endl;
     }
-    histo_->SetBinContent(ibin, newval);
+    histo_->SetBinContent(ibin, newval>0 ? newval : 0.0);
   } 
 }
 
@@ -169,75 +166,47 @@ double PEmerging1tagTo2tag(double fr[], int ijet){
   return prob/2.0;
 }
 
-double frCal(int jet_nTrack, int option){
-  // option 0 : overall fakerate
-  // option 1 : tagged as light quark or gluon
-  // option 2 : tagged as b quark
-  double fakerate = -10.0;
-  if (option == 0) { // Overall fakerate
-    if( jet_nTrack>=0 && jet_nTrack<4 ) fakerate = 0.0294997282326;
-    else if( jet_nTrack>=4 && jet_nTrack<8 ) fakerate = 0.00641810335219;
-    else if( jet_nTrack>=8 && jet_nTrack<12 ) fakerate = 0.00324129522778;
-    else if( jet_nTrack>=12 && jet_nTrack<16 ) fakerate = 0.00187143380754;
-    else if( jet_nTrack>=16 && jet_nTrack<20 ) fakerate = 0.00116369535681;
-    else if( jet_nTrack>=20 && jet_nTrack<25 ) fakerate = 0.000727684178855;
-    else if( jet_nTrack>=25 && jet_nTrack<30 ) fakerate = 0.000449172075605;
-    else if( jet_nTrack>=30 && jet_nTrack<40 ) fakerate = 0.000223103736062;
-    else if( jet_nTrack>=40 && jet_nTrack<50 ) fakerate = 7.17896109563e-05;
-    else if( jet_nTrack>=50 && jet_nTrack<60 ) fakerate = 7.02791803633e-05;
-    else if( jet_nTrack>=60 ) fakerate = 0.000173533204361;
-  }    
-  else if( option== 1){ // light quark (u, d, s, c) or gluon jet
-    if( jet_nTrack>=0 && jet_nTrack<4 ) fakerate = 0.0263485852629;
-    else if( jet_nTrack>=4 && jet_nTrack<8 ) fakerate = 0.00421362370253;
-    else if( jet_nTrack>=8 && jet_nTrack<12 ) fakerate = 0.00189180707093;
-    else if( jet_nTrack>=12 && jet_nTrack<16 ) fakerate = 0.00129529181868;
-    else if( jet_nTrack>=16 && jet_nTrack<20 ) fakerate = 0.000852863537148;
-    else if( jet_nTrack>=20 && jet_nTrack<25 ) fakerate = 0.000600345374551;
-    else if( jet_nTrack>=25 && jet_nTrack<30 ) fakerate = 0.000403687212383;
-    else if( jet_nTrack>=30 && jet_nTrack<40 ) fakerate = 0.00021440727869;
-    else if( jet_nTrack>=40 && jet_nTrack<50 ) fakerate = 7.00655509718e-05;
-    else if( jet_nTrack>=50 && jet_nTrack<60 ) fakerate = 7.58130263421e-05;
-    else if( jet_nTrack>=60 ) fakerate = 0.000188055637409;
+TH1F* FrHistoCal(TH1F* hfrac1, TH1F* hfrac2, TH1F* hfr1, TH1F* hfr2, double bfrac, double err_bfrac, string tag){
+  TH1F* hfr = (TH1F*)hfr1->Clone(("hfr_calc"+tag).c_str());
+
+  gRandom = new TRandom3(0);
+  double bfrac_temp = gRandom->Gaus(bfrac, err_bfrac);
+
+  for(int i=1; i<= hfr1->GetNbinsX(); i++){  
+    int ibinfrac = hfrac1->FindBin(hfr1->GetBinCenter(i));
+
+    double fb1 = 1.0 - hfrac1->GetBinContent(ibinfrac);
+    double fl1 = hfrac1->GetBinContent(ibinfrac);
+    double fb2 = 1.0 - hfrac2->GetBinContent(ibinfrac);
+    double fl2 = hfrac2->GetBinContent(ibinfrac);
+    double FR1 = hfr1->GetBinContent(i);
+    double FR2 = hfr2->GetBinContent(i);    
+
+    double norm = 1.0/(fb1- fb2);
+
+    double FR_b = ( norm*( fl2*FR1 - fl1*FR2)>=0.0 ?  norm*( fl2*FR1 - fl1*FR2) : 0.0 );
+    double FR_l = ( norm*(-fb2*FR1 + fb1*FR2)>=0.0 ?  norm*(-fb2*FR1 + fb1*FR2) : 0.0 );
+
+    hfr->SetBinContent(i, FR_b * bfrac_temp + FR_l * (1-bfrac_temp));
   }
-  else if( option == 2 ){ // B jet fakerate
-    if( jet_nTrack>=0 && jet_nTrack<4 ) fakerate = 0.112466610968;
-    else if( jet_nTrack>=4 && jet_nTrack<8 ) fakerate = 0.0508545823395;
-    else if( jet_nTrack>=8 && jet_nTrack<12 ) fakerate = 0.0281637758017;
-    else if( jet_nTrack>=12 && jet_nTrack<16 ) fakerate = 0.0133286537603;
-    else if( jet_nTrack>=16 && jet_nTrack<20 ) fakerate = 0.00781914126128;
-    else if( jet_nTrack>=20 && jet_nTrack<25 ) fakerate = 0.00345264398493;
-    else if( jet_nTrack>=25 && jet_nTrack<30 ) fakerate = 0.0013583204709;
-    else if( jet_nTrack>=30 && jet_nTrack<40 ) fakerate = 0.000376539537683;
-    else if( jet_nTrack>=40 && jet_nTrack<50 ) fakerate = 9.7794640169e-05;
-    else if( jet_nTrack>=50 && jet_nTrack<60 ) fakerate = 0.0;
-    else if( jet_nTrack>=60 ) fakerate = 0.0;
+  return hfr;
+} 
+
+void SmearHisto(TH1F* histo, bool doprint, bool mustbepositive)
+{
+  if( doprint ){
+    std::cout << "Start smearing the histogram " << histo->GetName() << " with Gaussian" << std::endl;
   }
-  else if( option == 3){
-    if( jet_nTrack>=0 && jet_nTrack<4 ) fakerate = 0.0304408613592;
-    else if( jet_nTrack>=4 && jet_nTrack<8 ) fakerate = 0.00642997398973;
-    else if( jet_nTrack>=8 && jet_nTrack<12 ) fakerate = 0.00314023531973;
-    else if( jet_nTrack>=12 && jet_nTrack<16 ) fakerate = 0.00186710990965;
-    else if( jet_nTrack>=16 && jet_nTrack<20 ) fakerate = 0.00118389690761;
-    else if( jet_nTrack>=20 && jet_nTrack<25 ) fakerate = 0.000735884881578;
-    else if( jet_nTrack>=25 && jet_nTrack<30 ) fakerate = 0.000449050799944;
-    else if( jet_nTrack>=30 && jet_nTrack<40 ) fakerate = 0.000222111702897;
-    else if( jet_nTrack>=40 && jet_nTrack<50 ) fakerate = 7.13832196197e-05;
-    else if( jet_nTrack>=50 && jet_nTrack<60 ) fakerate = 7.22104377928e-05;
-    else if( jet_nTrack>=60 ) fakerate = 0.000179119349923;
+  gRandom = new TRandom3(0);
+  for(int ibin = 1; ibin <= histo->GetNbinsX(); ibin++){
+    double newval = gRandom->Gaus( histo->GetBinContent(ibin), histo->GetBinError(ibin));
+    if( doprint ){
+      std::cout << " bin " << std::setw(2) << ibin << " gets smeared from " << std::setw(12) << histo->GetBinContent(ibin) << " +/- "<< std::setw(14) << std::left << histo->GetBinError(ibin) << " to " << std::setw(15) << std::left << newval << std::endl;
+    }
+    if( mustbepositive ){
+      newval = newval>=0 ? newval : 0.0;
+    }
+    histo->SetBinContent(ibin, newval);
   }
-  else if( option == 4) {
-    if( jet_nTrack>=0 && jet_nTrack<4 ) fakerate = 0.0346605852246;
-    else if( jet_nTrack>=4 && jet_nTrack<8 ) fakerate = 0.00871534831822;
-    else if( jet_nTrack>=8 && jet_nTrack<12 ) fakerate = 0.00442754337564;
-    else if( jet_nTrack>=12 && jet_nTrack<16 ) fakerate = 0.00245673628524;
-    else if( jet_nTrack>=16 && jet_nTrack<20 ) fakerate = 0.0015252395533;
-    else if( jet_nTrack>=20 && jet_nTrack<25 ) fakerate = 0.000875645549968;
-    else if( jet_nTrack>=25 && jet_nTrack<30 ) fakerate = 0.000495827174746;
-    else if( jet_nTrack>=30 && jet_nTrack<40 ) fakerate = 0.000230056073633;
-    else if( jet_nTrack>=40 && jet_nTrack<50 ) fakerate = 7.27419246687e-05;
-    else if( jet_nTrack>=50 && jet_nTrack<60 ) fakerate = 6.84956539772e-05;
-    else if( jet_nTrack>=60 ) fakerate = 0.000169904757058;
-  }
-  return fakerate;
 }
+

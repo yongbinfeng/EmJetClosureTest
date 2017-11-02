@@ -31,6 +31,7 @@ void EmJetEventCount::LoopOverTrees(int ntimes)
 
   // prepare ntimes smeared fakerate histos for the Closure test
   PrepareFrCalVector(ntimes);
+  PrepareFrCalVector2(ntimes);
   // prepare ntimes*4 n2tags
   PrepareFrCalResults(ntimes);
 
@@ -87,10 +88,14 @@ void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
     double afr2[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet overall
     double afr3[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet flavour
     double afr4[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet inverted fakerates
-   
+    double afr11[4] = {-1.0, -1.0, -1.0, -1.0};    
+
     for(int ij=0; ij<4; ij++){
-      afr0[ij] = vvfrcal_[10][itime].GetFakerate(nTrack[ij]); // QCD overall
-      afr2[ij] = vvfrcal_[3][itime].GetFakerate(nTrack[ij]); // GJet overall
+      afr0[ij] = vvfrcal_[10][itime].GetFakerate(nTrack[ij]); // GJetData 0to1tag
+      afr2[ij] = vvfrcal_[3][itime].GetFakerate(nTrack[ij]); // GJetData overall
+      afr11[ij] = vvfrcal_[11][itime].GetFakerate(nTrack[ij]);
+      
+      /*
       if (flavour[ij]<5 || flavour[ij]==21 || flavour[ij]==10 ){
         afr1[ij] = vvfrcal_[1][itime].GetFakerate(nTrack[ij]); // QCD light
         afr3[ij] = vvfrcal_[4][itime].GetFakerate(nTrack[ij]); // GJet light
@@ -101,27 +106,31 @@ void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
         afr3[ij] = vvfrcal_[5][itime].GetFakerate(nTrack[ij]); // GJet B
         afr4[ij] = vvfrcal_[7][itime].GetFakerate(nTrack[ij]); // GJet inverted B calc
       }
+      */
     }
 
     if( nJet_tag==1 ){// 1tag case
       double afr5[3] = {-1.0, -1.0, -1.0};
       double afr6[3] = {-1.0, -1.0, -1.0};
       double afr7[3] = {-1.0, -1.0, -1.0};
+      double afr12[4] = {-1.0, -1.0, -1.0};
       int ijet=0;
       for(int ij=0; ij<4; ij++){
         if( (*jet_isEmerging)[ij] ) continue;// skip the emerging jet
-        if (flavour[ij]<5 || flavour[ij]==21 || flavour[ij]==10 )  afr5[ijet] = vvfrcal_[1][itime].GetFakerate(nTrack[ij]);
-        else if(flavour[ij]==5 || flavour[ij]==19 ) afr5[ijet] = vvfrcal_[2][itime].GetFakerate(nTrack[ij]);
-        afr6[ijet] = vvfrcal_[8][itime].GetFakerate(nTrack[ij]);
-        afr7[ijet] = vvfrcal_[9][itime].GetFakerate(nTrack[ij]);
+        //if (flavour[ij]<5 || flavour[ij]==21 || flavour[ij]==10 )  afr5[ijet] = vvfrcal_[1][itime].GetFakerate(nTrack[ij]);
+        //else if(flavour[ij]==5 || flavour[ij]==19 ) afr5[ijet] = vvfrcal_[2][itime].GetFakerate(nTrack[ij]);
+        afr6[ijet] = vvfrcal_[8][itime].GetFakerate(nTrack[ij]);// GJetData 1to2tag
+        afr7[ijet] = vvfrcal_[9][itime].GetFakerate(nTrack[ij]);// QCDMC 1to2tag
+        afr12[ijet] = vvfrcal_[12][itime].GetFakerate(nTrack[ij]);// QCDMC 1to2tag
         ijet++;
       }
-      vvn2tag_[5][itime] += P1tagTo2tag(afr5) * tweight_;
+      //vvn2tag_[5][itime] += P1tagTo2tag(afr5) * tweight_;
       vvn2tag_[6][itime] += P1tagTo2tag(afr6) * tweight_;
       vvn2tag_[7][itime] += P1tagTo2tag(afr7) * tweight_;
+      vvn2tag_[9][itime] += P1tagTo2tag(afr12) * tweight_;
 
       //if( itime==0 ) FillClosureTestHistos1To2Tag(afr5, "__QCDPredicted1To2Tag");
-      if( itime==0 ) FillClosureTestHistos1To2Tag(afr6, "__GJetPredicted1To2Tag");
+      //if( itime==0 ) FillClosureTestHistos1To2Tag(afr6, "__GJetPredicted1To2Tag");
     }
 
     //if( itime==0 ) FillClosureTestHistos0To2Tag(afr1, "__withQCDflavour");
@@ -129,16 +138,18 @@ void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
     //if( itime==0 ) FillClosureTestHistos0To2Tag(afr4, "__withGJetCalcflavour");
 
     vvn1tag_[0][itime] += PnTag(afr0, 1) * tweight_; // from QCD overall
-    vvn1tag_[1][itime] += PnTag(afr1, 1) * tweight_; // from QCD binned by flavour
+    //vvn1tag_[1][itime] += PnTag(afr1, 1) * tweight_; // from QCD binned by flavour
     vvn1tag_[2][itime] += PnTag(afr2, 1) * tweight_; // from GJet overall
-    vvn1tag_[3][itime] += PnTag(afr3, 1) * tweight_; // from GJet binned by flavour
-    vvn1tag_[4][itime] += PnTag(afr4, 1) * tweight_; // from GJet binned by calc flavour
+    //vvn1tag_[3][itime] += PnTag(afr3, 1) * tweight_; // from GJet binned by flavour
+    //vvn1tag_[4][itime] += PnTag(afr4, 1) * tweight_; // from GJet binned by calc flavour
+    vvn1tag_[8][itime] += PnTag(afr11, 1) * tweight_;
 
     vvn2tag_[0][itime] += PnTag(afr0, 2) * tweight_; // from QCD overall
-    vvn2tag_[1][itime] += PnTag(afr1, 2) * tweight_; // from QCD binned by flavour
+    //vvn2tag_[1][itime] += PnTag(afr1, 2) * tweight_; // from QCD binned by flavour
     vvn2tag_[2][itime] += PnTag(afr2, 2) * tweight_; // from GJet overall
-    vvn2tag_[3][itime] += PnTag(afr3, 2) * tweight_; // from GJet binned by flavour
-    vvn2tag_[4][itime] += PnTag(afr4, 2) * tweight_; // from GJet binned by flavour
+    //vvn2tag_[3][itime] += PnTag(afr3, 2) * tweight_; // from GJet binned by flavour
+    //vvn2tag_[4][itime] += PnTag(afr4, 2) * tweight_; // from GJet binned by flavour
+    vvn2tag_[8][itime] += PnTag(afr11, 2) * tweight_;    
   }
 
   //histo_->hist1d["ht"]->Fill(ht, tweight_);
@@ -152,15 +163,32 @@ void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
 
 void EmJetEventCount::FillEventCountHistos(int ntimes)
 {
+  // fill the number of events with 1 tags
+  for(int itime=0; itime < ntimes; itime++){
+    histo_->hist1d["n1tag__0"]->Fill(vvn1tag_[0][itime]);
+    histo_->hist1d["n1tag__1"]->Fill(vvn1tag_[1][itime]);
+    histo_->hist1d["n1tag__2"]->Fill(vvn1tag_[2][itime]);
+    histo_->hist1d["n1tag__3"]->Fill(vvn1tag_[3][itime]);
+    histo_->hist1d["n1tag__4"]->Fill(vvn1tag_[4][itime]);
+    histo_->hist1d["n1tag__5"]->Fill(vvn1tag_[5][itime]);
+    histo_->hist1d["n1tag__6"]->Fill(vvn1tag_[6][itime]);
+    histo_->hist1d["n1tag__7"]->Fill(vvn1tag_[7][itime]);
+    histo_->hist1d["n1tag__8"]->Fill(vvn1tag_[8][itime]);
+    histo_->hist1d["n1tag__9"]->Fill(vvn1tag_[9][itime]);
+  }
+
   // fill the number of events with 2 tags
   for(int itime=0; itime < ntimes; itime++){
-    histo_->hist1d["n2tag_0"]->Fill(vvn2tag_[0][itime]);
-    histo_->hist1d["n2tag_1"]->Fill(vvn2tag_[1][itime]);
-    histo_->hist1d["n2tag_2"]->Fill(vvn2tag_[2][itime]);
-    histo_->hist1d["n2tag_3"]->Fill(vvn2tag_[3][itime]);
-    histo_->hist1d["n2tag_4"]->Fill(vvn2tag_[4][itime]);
-    histo_->hist1d["n2tag_5"]->Fill(vvn2tag_[5][itime]);
-    histo_->hist1d["n2tag_6"]->Fill(vvn2tag_[6][itime]);
+    histo_->hist1d["n2tag__0"]->Fill(vvn2tag_[0][itime]);
+    histo_->hist1d["n2tag__1"]->Fill(vvn2tag_[1][itime]);
+    histo_->hist1d["n2tag__2"]->Fill(vvn2tag_[2][itime]);
+    histo_->hist1d["n2tag__3"]->Fill(vvn2tag_[3][itime]);
+    histo_->hist1d["n2tag__4"]->Fill(vvn2tag_[4][itime]);
+    histo_->hist1d["n2tag__5"]->Fill(vvn2tag_[5][itime]);
+    histo_->hist1d["n2tag__6"]->Fill(vvn2tag_[6][itime]);
+    histo_->hist1d["n2tag__7"]->Fill(vvn2tag_[7][itime]);
+    histo_->hist1d["n2tag__8"]->Fill(vvn2tag_[8][itime]);
+    histo_->hist1d["n2tag__9"]->Fill(vvn2tag_[9][itime]);
   }  
 }
 
@@ -257,6 +285,8 @@ void EmJetEventCount::PrintOutResults()
   std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[5]);
   std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[6]);
   std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[7]);
+  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[8]);
+  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[9]);
   std::cout << "------------------------------------------------" << std::endl;
   std::cout << "Total number of 1tag events observed:  "  << n1tag_         << std::endl;
   std::cout << "Total numebr of 1tag events observed:  "  << histo_->hist1d["nJet_tag"]->GetBinContent(2)  << "+/-"<< histo_->hist1d["nJet_tag"]->GetBinError(2)<< std::endl;
@@ -265,6 +295,11 @@ void EmJetEventCount::PrintOutResults()
   std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[2]);
   std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[3]);
   std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[4]);
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[5]);
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[6]);
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[7]);
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[8]);
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[9]);
   std::cout << std::endl;
 }
 
@@ -299,14 +334,14 @@ void EmJetEventCount::SetOptions(string filename, const vector<string>& vhistona
 {
   isData_ = isData;
   // initialize FR histograms from vhistoname
-  for(auto &ihistoname: vhistoname ){
-    FrCal frcal_temp = FrCal(filename, ihistoname);
+  for(auto &iname: vhistoname ){
+    FrCal frcal_temp = FrCal(filename, iname);
     vfrcal_.push_back(frcal_temp);
   }
   std::cout << " Samples set to " << (isData? "Data": "MC") << std::endl;
   std::cout << " Fakerate histogram retrieved from" << std::endl;
-  for(auto &ihistoname: vhistoname ){
-    std::cout << "        " << ihistoname << std::endl;
+  for(auto &iname: vhistoname ){
+    std::cout << "        " << iname << std::endl;
   }
   std::cout << " of " << filename << std::endl;
 }
@@ -352,10 +387,11 @@ void EmJetEventCount::PrepareFrCalVector(int ntimes)
       // smear the FR histograms, leaving the first one as the original
       //  print out the smeared results for the first 10 histograms
       if( i!=0 ){
-        if( i==1 ) fr_temp.SmearHistoBy1Sigma(true, 1);
+        if( i==1 )      fr_temp.SmearHistoBy1Sigma(true, 1);
         else if( i==2 ) fr_temp.SmearHistoBy1Sigma(true, -1);
         //if( i<10 ) fr_temp.SmearFrHisto(true);
-        else       fr_temp.SmearFrHisto(false);
+        else if( i<10 ) fr_temp.SmearFrHisto(true);
+        else            fr_temp.SmearFrHisto(false);
       }
       vfrcal_temp.push_back(fr_temp);
     }
@@ -363,9 +399,31 @@ void EmJetEventCount::PrepareFrCalVector(int ntimes)
   }
 }
 
+void EmJetEventCount::PrepareFrCalVector2(int ntimes)
+{
+  vector<FrCal> vfrcal_temp0to1;
+  vector<FrCal> vfrcal_temp1to2;
+  bool doprint = false;
+  for(int i=0; i< ntimes; i++){
+    if( i< 10 ) doprint = true;
+    else doprint = false;
+    TH1F* hfrac1t = (TH1F*)hfrac1_->Clone((std::string(hfrac1_->GetName())+"_"+std::to_string(i)).c_str() );  SmearHisto(hfrac1t, doprint);
+    TH1F* hfrac2t = (TH1F*)hfrac2_->Clone((std::string(hfrac2_->GetName())+"_"+std::to_string(i)).c_str() );  SmearHisto(hfrac2t, doprint);
+    TH1F* hfr1t   = (TH1F*)hfr1_->Clone(  (std::string(hfr1_->GetName())  +"_"+std::to_string(i)).c_str() );  SmearHisto(hfr1t,   doprint);
+    TH1F* hfr2t   = (TH1F*)hfr2_->Clone(  (std::string(hfr2_->GetName())  +"_"+std::to_string(i)).c_str() );  SmearHisto(hfr2t,   doprint);
+
+    TH1F* histo0to1 = FrHistoCal(hfrac1_, hfrac2_, hfr1_, hfr2_, 0.05850600927, 0.0005308097885, "0to1");
+    TH1F* histo1to2 = FrHistoCal(hfrac1_, hfrac2_, hfr1_, hfr2_, 0.09730214808, 0.007174446111,  "1to2");
+    vfrcal_temp0to1.push_back ( FrCal(histo0to1) );
+    vfrcal_temp1to2.push_back ( FrCal(histo1to2) );
+  } 
+  vvfrcal_.push_back(vfrcal_temp0to1);
+  vvfrcal_.push_back(vfrcal_temp1to2);
+}
+
 void EmJetEventCount::PrepareFrCalResults(int ntimes)
 { 
-  for(unsigned ifrcal=0; ifrcal < 8; ifrcal++){
+  for(unsigned ifrcal=0; ifrcal < 10; ifrcal++){
     vector<double> vinit;
     for(int i=0; i<ntimes; i++){
       vinit.push_back(0.); 

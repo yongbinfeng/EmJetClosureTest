@@ -49,6 +49,11 @@ class EmJetEventCount : protected BaseClass
     SET_MEMBER_DEFAULT(MaxEntries, long, nentries_max, -1);
     void LoopOverTrees (int ntimes = 1);
 
+    TH1F* hfrac1_;
+    TH1F* hfrac2_;
+    TH1F* hfr1_;
+    TH1F* hfr2_;
+
   protected:
     TFile* ofile_;
     TTree* tree_; 
@@ -85,6 +90,7 @@ class EmJetEventCount : protected BaseClass
     double CalculateTreeWeight(int treenumber, long eventnumber);
     void PrepareNewTree();
     void PrepareFrCalVector(int ntimes);
+    void PrepareFrCalVector2(int ntimes);
     void PrepareFrCalResults(int ntimes);
     void InitCrossSection(const EmJetSampleCollection& samplesColl);
     bool IsChainValid();

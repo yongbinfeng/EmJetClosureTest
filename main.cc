@@ -70,10 +70,12 @@ int main(int argc, char *argv[])
         vector<string> vhfr = {"fakerate_QCDMC_ptX", "fakerate_QCDMC_ptX_Lquark", "fakerate_QCDMC_ptX_Bquark", "fakerate_GJetData_ptX", "fakerate_GJetMC_ptX_Lquark", "fakerate_GJetMC_ptX_Bquark", "FR_l_calc", "FR_b_calc", "fakerate_GJetData_calc_1to2tag", "fakerate_QCDMC_truth_1to2tag", "fakerate_GJetData_calc_0to1tag"};
         // set basic info for closure test
         hm.SetOptions(ffr, vhfr, ejsamplesColl.isData);
-        //for(int i=0; i<2; i++){
-        //  std::cout << " running on " << i << " time " << std::endl;
-        //  hm.LoopOverTrees();
-        //}
+        TFile *ffrac = new TFile("/data/users/fengyb/frcal/fitdistribution/root/test_csv_GJet_5mm_Data_v1.root");
+        hm.hfrac1_ = (TH1F*)(ffrac->Get("fraction_typeVII"));
+        hm.hfrac2_ = (TH1F*)(ffrac->Get("fraction_typeVIII"));
+        TFile *fFR = new TFile("/data/users/fengyb/frcal/gettruthinfo/root/result_fakerate_5mm_Data_v1.root");
+        hm.hfr1_ = (TH1F*)(fFR->Get("fakerate_GJetData_ptX_TypeVII"));
+        hm.hfr2_ = (TH1F*)(fFR->Get("fakerate_GJetData_ptX_TypeVIII"));
         hm.LoopOverTrees(repeatedTime);
         hm.WriteHistograms();
         std::cout << "--------------------------finished--------------------------------\n";

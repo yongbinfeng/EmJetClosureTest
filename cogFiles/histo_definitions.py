@@ -38,14 +38,17 @@ def user_define_histos():
     name = 'jet_nTrackPostCut'         ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,  100 ) )
     name = 'jet_csv'                   ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,   1. ) )
     name = 'nJet_tag'                  ; histo_dict[name] = Histo1F(name , Bins( 10 ,  0  ,   10 ) )
-    name = 'n2tag_0'                   ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
-    name = 'n2tag_1'                   ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
-    name = 'n2tag_2'                   ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
-    name = 'n2tag_3'                   ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
-    name = 'n2tag_4'                   ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
-    name = 'n2tag_5'                   ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
-    name = 'n2tag_6'                   ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
+    name = 'n1tag'                     ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
+    name = 'n2tag'                     ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
 
+    histo_clone_dict = OrderedDict()
+    for name, histo in histo_dict.iteritems():
+        if name[:5]=='n1tag' or name[:5]=='n2tag':
+           for i in xrange(10):
+               histo_clone = clone_object(histo, postfix='%s'%i)
+               histo_clone_dict[histo_clone.name] = histo_clone
+    histo_dict.update(histo_clone_dict)
+        
     # Jet plot variations
     histo_clone_dict = OrderedDict()
     for name, histo in histo_dict.iteritems():
