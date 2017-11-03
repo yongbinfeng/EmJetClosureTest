@@ -38,7 +38,7 @@ def user_define_histos():
     name = 'jet_nTrackPostCut'         ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,  100 ) )
     name = 'jet_csv'                   ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,   1. ) )
     name = 'nJet_tag'                  ; histo_dict[name] = Histo1F(name , Bins( 10 ,  0  ,   10 ) )
-    name = 'n1tag'                     ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
+    name = 'n1tag'                     ; histo_dict[name] = Histo1F(name , Bins(200 , 1500  ,   3500 ) )
     name = 'n2tag'                     ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
 
     histo_clone_dict = OrderedDict()

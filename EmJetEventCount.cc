@@ -412,8 +412,8 @@ void EmJetEventCount::PrepareFrCalVector2(int ntimes)
     TH1F* hfr1t   = (TH1F*)hfr1_->Clone(  (std::string(hfr1_->GetName())  +"_"+std::to_string(i)).c_str() );  SmearHisto(hfr1t,   doprint);
     TH1F* hfr2t   = (TH1F*)hfr2_->Clone(  (std::string(hfr2_->GetName())  +"_"+std::to_string(i)).c_str() );  SmearHisto(hfr2t,   doprint);
 
-    TH1F* histo0to1 = FrHistoCal(hfrac1_, hfrac2_, hfr1_, hfr2_, 0.05850600927, 0.0005308097885, "0to1");
-    TH1F* histo1to2 = FrHistoCal(hfrac1_, hfrac2_, hfr1_, hfr2_, 0.09730214808, 0.007174446111,  "1to2");
+    TH1F* histo0to1 = FrHistoCal(hfrac1t, hfrac2t, hfr1t, hfr2t, 0.05850600927, 0.0005308097885, "0to1");
+    TH1F* histo1to2 = FrHistoCal(hfrac1t, hfrac2t, hfr1t, hfr2t, 0.09730214808, 0.007174446111,  "1to2");
     vfrcal_temp0to1.push_back ( FrCal(histo0to1) );
     vfrcal_temp1to2.push_back ( FrCal(histo1to2) );
   } 
