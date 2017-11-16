@@ -38,8 +38,8 @@ def user_define_histos():
     name = 'jet_nTrackPostCut'         ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,  100 ) )
     name = 'jet_csv'                   ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,   1. ) )
     name = 'nJet_tag'                  ; histo_dict[name] = Histo1F(name , Bins( 10 ,  0  ,   10 ) )
-    name = 'n1tag'                     ; histo_dict[name] = Histo1F(name , Bins(200 , 1500  ,   3500 ) )
-    name = 'n2tag'                     ; histo_dict[name] = Histo1F(name , Bins(300 ,  0  ,   30 ) )
+    name = 'n1tag'                     ; histo_dict[name] = Histo1F(name , Bins(500 ,  0  ,  10000 ) )
+    name = 'n2tag'                     ; histo_dict[name] = Histo1F(name , Bins(400 ,  0  ,   200 ) )
 
     histo_clone_dict = OrderedDict()
     for name, histo in histo_dict.iteritems():
@@ -75,13 +75,7 @@ def user_define_histos():
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='2tag')
             histo_clone_dict[histo_clone.name] = histo_clone
-            histo_clone = clone_object(histo, postfix='Predicted0To2Tag__withQCDflavour')
-            histo_clone_dict[histo_clone.name] = histo_clone
-            histo_clone = clone_object(histo, postfix='Predicted0To2Tag__withGJetflavour')
-            histo_clone_dict[histo_clone.name] = histo_clone
-            histo_clone = clone_object(histo, postfix='Predicted0To2Tag__withGJetCalcflavour')
-            histo_clone_dict[histo_clone.name] = histo_clone
-            histo_clone = clone_object(histo, postfix='QCDPredicted1To2Tag')
+            histo_clone = clone_object(histo, postfix='GJetPredicted0To1Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='GJetPredicted1To2Tag')
             histo_clone_dict[histo_clone.name] = histo_clone

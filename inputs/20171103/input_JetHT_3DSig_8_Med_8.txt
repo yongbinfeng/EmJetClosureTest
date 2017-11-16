@@ -1,0 +1,3 @@
+# sample name         , xsec[fb] ,    root file
+JetHTRun2016G1        ,        1 ,  /data/users/fengyb/80Xresult/sntuples_QCD-3DSig_8_Med_8/ntuple_JetHTRun2016G1.root
+JetHTRun2016H         ,        1 ,  /data/users/fengyb/80Xresult/sntuples_QCD-3DSig_8_Med_8/ntuple_JetHTRun2016H.root

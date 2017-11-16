@@ -30,8 +30,10 @@ void EmJetEventCount::LoopOverTrees(int ntimes)
   timer_total_.Start();
 
   // prepare ntimes smeared fakerate histos for the Closure test
-  PrepareFrCalVector(ntimes);
-  PrepareFrCalVector2(ntimes);
+  if( doPredict_ ){
+    PrepareFrCalVector(ntimes);
+    PrepareFrCalVector2(ntimes);
+  }
   // prepare ntimes*4 n2tags
   PrepareFrCalResults(ntimes);
 
@@ -64,15 +66,9 @@ void EmJetEventCount::LoopOverTrees(int ntimes)
 
 void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
 {
-  double ht = 0;
   int nJet_tag = 0;
-  int nTrack[4];
-  int flavour[4];
 
   for (unsigned ij = 0; ij < (*jet_pt).size(); ij++) {
-    ht += (*jet_pt)[ij];
-    nTrack[ij] = (*jet_nTrackPostCut)[ij];
-    flavour[ij] = (*jet_flavour)[ij];
     if( (*jet_isEmerging)[ij] ) nJet_tag++;
     //if( (*jet_Alpha3DSig)[ij]<0.45 && (*jet_medianIP)[ij]>0.05 ) nJet_tag++;
   }
@@ -80,85 +76,63 @@ void EmJetEventCount::LoopOverEvent(long eventnumber,  int ntimes)
   if( nJet_tag==1 ) n1tag_ += tweight_;
   if( nJet_tag==2 ) n2tag_ += tweight_;
 
-  // Calculate number of backgrounds
-  for(int itime=0; itime<ntimes; itime++){
-    // initialize arrays for fakerates
-    double afr0[4] = {-1.0, -1.0, -1.0, -1.0}; // results from QCD overall
-    double afr1[4] = {-1.0, -1.0, -1.0, -1.0}; // results from QCD flavour 
-    double afr2[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet overall
-    double afr3[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet flavour
-    double afr4[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet inverted fakerates
-    double afr11[4] = {-1.0, -1.0, -1.0, -1.0};    
-
-    for(int ij=0; ij<4; ij++){
-      afr0[ij] = vvfrcal_[10][itime].GetFakerate(nTrack[ij]); // GJetData 0to1tag
-      afr2[ij] = vvfrcal_[3][itime].GetFakerate(nTrack[ij]); // GJetData overall
-      afr11[ij] = vvfrcal_[11][itime].GetFakerate(nTrack[ij]);
-      
-      /*
-      if (flavour[ij]<5 || flavour[ij]==21 || flavour[ij]==10 ){
-        afr1[ij] = vvfrcal_[1][itime].GetFakerate(nTrack[ij]); // QCD light
-        afr3[ij] = vvfrcal_[4][itime].GetFakerate(nTrack[ij]); // GJet light
-        afr4[ij] = vvfrcal_[6][itime].GetFakerate(nTrack[ij]); // GJet inverted light calc
-      }
-      else if( flavour[ij]==5 || flavour[ij]==19 ){
-        afr1[ij] = vvfrcal_[2][itime].GetFakerate(nTrack[ij]); // QCD B
-        afr3[ij] = vvfrcal_[5][itime].GetFakerate(nTrack[ij]); // GJet B
-        afr4[ij] = vvfrcal_[7][itime].GetFakerate(nTrack[ij]); // GJet inverted B calc
-      }
-      */
-    }
-
-    if( nJet_tag==1 ){// 1tag case
-      double afr5[3] = {-1.0, -1.0, -1.0};
-      double afr6[3] = {-1.0, -1.0, -1.0};
-      double afr7[3] = {-1.0, -1.0, -1.0};
-      double afr12[4] = {-1.0, -1.0, -1.0};
-      int ijet=0;
-      for(int ij=0; ij<4; ij++){
-        if( (*jet_isEmerging)[ij] ) continue;// skip the emerging jet
-        //if (flavour[ij]<5 || flavour[ij]==21 || flavour[ij]==10 )  afr5[ijet] = vvfrcal_[1][itime].GetFakerate(nTrack[ij]);
-        //else if(flavour[ij]==5 || flavour[ij]==19 ) afr5[ijet] = vvfrcal_[2][itime].GetFakerate(nTrack[ij]);
-        afr6[ijet] = vvfrcal_[8][itime].GetFakerate(nTrack[ij]);// GJetData 1to2tag
-        afr7[ijet] = vvfrcal_[9][itime].GetFakerate(nTrack[ij]);// QCDMC 1to2tag
-        afr12[ijet] = vvfrcal_[12][itime].GetFakerate(nTrack[ij]);// QCDMC 1to2tag
-        ijet++;
-      }
-      //vvn2tag_[5][itime] += P1tagTo2tag(afr5) * tweight_;
-      vvn2tag_[6][itime] += P1tagTo2tag(afr6) * tweight_;
-      vvn2tag_[7][itime] += P1tagTo2tag(afr7) * tweight_;
-      vvn2tag_[9][itime] += P1tagTo2tag(afr12) * tweight_;
-
-      //if( itime==0 ) FillClosureTestHistos1To2Tag(afr5, "__QCDPredicted1To2Tag");
-      //if( itime==0 ) FillClosureTestHistos1To2Tag(afr6, "__GJetPredicted1To2Tag");
-    }
-
-    //if( itime==0 ) FillClosureTestHistos0To2Tag(afr1, "__withQCDflavour");
-    //if( itime==0 ) FillClosureTestHistos0To2Tag(afr3, "__withGJetflavour");
-    //if( itime==0 ) FillClosureTestHistos0To2Tag(afr4, "__withGJetCalcflavour");
-
-    vvn1tag_[0][itime] += PnTag(afr0, 1) * tweight_; // from QCD overall
-    //vvn1tag_[1][itime] += PnTag(afr1, 1) * tweight_; // from QCD binned by flavour
-    vvn1tag_[2][itime] += PnTag(afr2, 1) * tweight_; // from GJet overall
-    //vvn1tag_[3][itime] += PnTag(afr3, 1) * tweight_; // from GJet binned by flavour
-    //vvn1tag_[4][itime] += PnTag(afr4, 1) * tweight_; // from GJet binned by calc flavour
-    vvn1tag_[8][itime] += PnTag(afr11, 1) * tweight_;
-
-    vvn2tag_[0][itime] += PnTag(afr0, 2) * tweight_; // from QCD overall
-    //vvn2tag_[1][itime] += PnTag(afr1, 2) * tweight_; // from QCD binned by flavour
-    vvn2tag_[2][itime] += PnTag(afr2, 2) * tweight_; // from GJet overall
-    //vvn2tag_[3][itime] += PnTag(afr3, 2) * tweight_; // from GJet binned by flavour
-    //vvn2tag_[4][itime] += PnTag(afr4, 2) * tweight_; // from GJet binned by flavour
-    vvn2tag_[8][itime] += PnTag(afr11, 2) * tweight_;    
+  histo_->hist1d["nJet_tag"]->Fill(nJet_tag, tweight_);
+ 
+  if( doFill_ ){ 
+    FillEventHistos("");
+    if( nJet_tag==0 ) FillEventHistos("__0tag");
+    if( nJet_tag==1 ) FillEventHistos("__1tag");
+    if( nJet_tag==2 ) FillEventHistos("__2tag");
   }
 
-  //histo_->hist1d["ht"]->Fill(ht, tweight_);
-  histo_->hist1d["nJet_tag"]->Fill(nJet_tag, tweight_);
-  
-  //FillEventHistos("");
-  //if( nJet_tag==0 ) FillEventHistos("__0tag");
-  //if( nJet_tag==1 ) FillEventHistos("__1tag");
-  //if( nJet_tag==2 ) FillEventHistos("__2tag");
+  if( !doPredict_ ) return;
+  for(int itime=0; itime< ntimes; itime++){ 
+    PredictBackground(itime, nJet_tag, itime==0 && doFill_ );
+  }
+}
+
+void EmJetEventCount::PredictBackground(int itime, int nJet_tag, bool isfillhisto)
+{
+  // results from GJet overall
+  double afr0[4] = {-1.0, -1.0, -1.0, -1.0};
+  for(int ij=0; ij<4; ij++){
+    afr0[ij] = vvfrcal_[0][itime].GetFakerate((*jet_nTrackPostCut)[ij]);
+  }
+  vvn1tag_[0][itime] += PnTag(afr0, 1) * tweight_;
+  vvn2tag_[0][itime] += PnTag(afr0, 2) * tweight_;
+
+  // 0tag to 1tag
+  if( nJet_tag==0 ){
+    double afr1[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet 0to1tag
+    double afr3[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet 0to1tag smeared
+
+    for( int ij=0; ij<4; ij++){
+      afr1[ij] = vvfrcal_[1][itime].GetFakerate((*jet_nTrackPostCut)[ij]);
+      //afr3[ij] = vvfrcal_[3][itime].GetFakerate((*jet_nTrackPostCut)[ij]);
+    }
+    vvn1tag_[1][itime] += PnTag(afr1, 1) * tweight_;
+    //vvn1tag_[3][itime] += PnTag(afr3, 1) * tweight_;
+
+    if( isfillhisto ) FillClosureTestHistos0To1Tag(afr1, "__GJetPredicted0To1Tag");
+  }
+
+  // 1tag to 2tag
+  if( nJet_tag==1 ){
+    double afr2[3] = {-1.0, -1.0, -1.0};
+    double afr4[4] = {-1.0, -1.0, -1.0};
+    int ijet=0;
+    for(int ij=0; ij<4; ij++){
+      if( (*jet_isEmerging)[ij] ) continue;// skip the emerging jet
+      //if( (*jet_Alpha3DSig)[ij]<0.45 && (*jet_medianIP)[ij]>0.05 ) continue;
+      afr2[ijet] = vvfrcal_[2][itime].GetFakerate((*jet_nTrackPostCut)[ij]);// 1to2tag
+      //afr4[ijet] = vvfrcal_[4][itime].GetFakerate((*jet_nTrackPostCut)[ij]);// 1to2tag smeared
+      ijet++;
+    }
+    vvn2tag_[2][itime] += P1tagTo2tag(afr2) * tweight_;
+    //vvn2tag_[4][itime] += P1tagTo2tag(afr4) * tweight_;
+
+    if( isfillhisto ) FillClosureTestHistos1To2Tag(afr2, "__GJetPredicted1To2Tag");
+  }
 }
 
 void EmJetEventCount::FillEventCountHistos(int ntimes)
@@ -170,11 +144,6 @@ void EmJetEventCount::FillEventCountHistos(int ntimes)
     histo_->hist1d["n1tag__2"]->Fill(vvn1tag_[2][itime]);
     histo_->hist1d["n1tag__3"]->Fill(vvn1tag_[3][itime]);
     histo_->hist1d["n1tag__4"]->Fill(vvn1tag_[4][itime]);
-    histo_->hist1d["n1tag__5"]->Fill(vvn1tag_[5][itime]);
-    histo_->hist1d["n1tag__6"]->Fill(vvn1tag_[6][itime]);
-    histo_->hist1d["n1tag__7"]->Fill(vvn1tag_[7][itime]);
-    histo_->hist1d["n1tag__8"]->Fill(vvn1tag_[8][itime]);
-    histo_->hist1d["n1tag__9"]->Fill(vvn1tag_[9][itime]);
   }
 
   // fill the number of events with 2 tags
@@ -184,11 +153,6 @@ void EmJetEventCount::FillEventCountHistos(int ntimes)
     histo_->hist1d["n2tag__2"]->Fill(vvn2tag_[2][itime]);
     histo_->hist1d["n2tag__3"]->Fill(vvn2tag_[3][itime]);
     histo_->hist1d["n2tag__4"]->Fill(vvn2tag_[4][itime]);
-    histo_->hist1d["n2tag__5"]->Fill(vvn2tag_[5][itime]);
-    histo_->hist1d["n2tag__6"]->Fill(vvn2tag_[6][itime]);
-    histo_->hist1d["n2tag__7"]->Fill(vvn2tag_[7][itime]);
-    histo_->hist1d["n2tag__8"]->Fill(vvn2tag_[8][itime]);
-    histo_->hist1d["n2tag__9"]->Fill(vvn2tag_[9][itime]);
   }  
 }
 
@@ -204,6 +168,18 @@ void EmJetEventCount::FillClosureTestHistos0To2Tag(double fr[], string tag)
   histo_->hist1d["ht__Predicted0To2Tag"+tag]->Fill(ht4, tweight_*prob);
 }
 
+void EmJetEventCount::FillClosureTestHistos0To1Tag(double fr[], string tag)
+{
+  double ht4=0;
+  for(unsigned ij=0; ij<(*jet_pt).size(); ij++){
+    ht4 += (*jet_pt)[ij];
+    double pem = PEmergingnTag(fr, 1, ij);
+    FillJetHistos(ij, "__Emerging"+tag, tweight_*pem);
+  } 
+  double prob = PnTag(fr, 1);
+  histo_->hist1d["ht"+tag]->Fill(ht4, tweight_*prob);  
+}
+
 void EmJetEventCount::FillClosureTestHistos1To2Tag(double fr[], string tag)
 {
   double ht4=0;
@@ -213,6 +189,7 @@ void EmJetEventCount::FillClosureTestHistos1To2Tag(double fr[], string tag)
   for(unsigned ij=0; ij<(*jet_pt).size(); ij++){
     ht4 += (*jet_pt)[ij];
     if( (*jet_isEmerging)[ij] ){
+    //if( (*jet_Alpha3DSig)[ij]<0.45 && (*jet_medianIP)[ij]>0.05 ){
       FillJetHistos(ij, "__Emerging"+tag, tweight_*prob);
      iemj = 1;
     }
@@ -282,11 +259,6 @@ void EmJetEventCount::PrintOutResults()
   std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[2]);
   std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[3]);
   std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[4]);
-  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[5]);
-  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[6]);
-  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[7]);
-  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[8]);
-  std::cout << "Total number of 2tag events predicted : "; PrintResultwithError(vvn2tag_[9]);
   std::cout << "------------------------------------------------" << std::endl;
   std::cout << "Total number of 1tag events observed:  "  << n1tag_         << std::endl;
   std::cout << "Total numebr of 1tag events observed:  "  << histo_->hist1d["nJet_tag"]->GetBinContent(2)  << "+/-"<< histo_->hist1d["nJet_tag"]->GetBinError(2)<< std::endl;
@@ -295,11 +267,6 @@ void EmJetEventCount::PrintOutResults()
   std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[2]);
   std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[3]);
   std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[4]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[5]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[6]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[7]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[8]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[9]);
   std::cout << std::endl;
 }
 
@@ -330,20 +297,56 @@ void EmJetEventCount::WriteHistograms()
   ofile_->Write();
 }
 
-void EmJetEventCount::SetOptions(string filename, const vector<string>& vhistoname, bool isData)
+void EmJetEventCount::SetOptions(string filename, const vector<string>& vFRhnames, const vector<string>& v2fracname, const vector<string>& v2FRname, string bfractionintags, bool isData)
 {
   isData_ = isData;
-  // initialize FR histograms from vhistoname
-  for(auto &iname: vhistoname ){
+  std::cout << " Samples set to " << (isData? "Data": "MC") << std::endl;
+
+  if( !doPredict_ ) return;
+  // initialize FR histograms from vFRhnames
+  for(auto &iname: vFRhnames ){
     FrCal frcal_temp = FrCal(filename, iname);
     vfrcal_.push_back(frcal_temp);
   }
-  std::cout << " Samples set to " << (isData? "Data": "MC") << std::endl;
   std::cout << " Fakerate histogram retrieved from" << std::endl;
-  for(auto &iname: vhistoname ){
+  for(auto &iname: vFRhnames ){
     std::cout << "        " << iname << std::endl;
   }
-  std::cout << " of " << filename << std::endl;
+
+  // initialize fraction histograms
+  TFile *ff = new TFile(filename.c_str());
+  hfrac1_ = (TH1F*)(ff->Get(v2fracname[0].c_str()));
+  hfrac2_ = (TH1F*)(ff->Get(v2fracname[1].c_str()));
+  std::cout << " 2 Fraction histograms set to \n     " << v2fracname[0] << "\n     " << v2fracname[1] << std::endl; 
+  
+  //initialze 2 types of Fakerates
+  hfr1_ = (TH1F*)(ff->Get(v2FRname[0].c_str()));
+  hfr2_ = (TH1F*)(ff->Get(v2FRname[1].c_str()));
+  std::cout << " 2 Fakerate histograms set to \n     " << v2FRname[0] << "\n     "<< v2FRname[1] << std::endl;
+
+  // get the b fractions in 0 tag and 1 tag
+  TH1F* hbfrac = (TH1F*)(ff->Get(bfractionintags.c_str()));
+  bfrac0_ = hbfrac->GetBinContent(1);
+  bfrac1_ = hbfrac->GetBinContent(2);
+  err_bfrac0_ = hbfrac->GetBinError(1);
+  err_bfrac1_ = hbfrac->GetBinError(1);
+  std::cout << " B fractions read from " << bfractionintags << std::endl;
+  std::cout << " B fraction in 0tag " << bfrac0_ << "+/-" << err_bfrac0_ << std::endl;
+  std::cout << " B fraction in 1tag " << bfrac1_ << "+/-" << err_bfrac1_ << std::endl;  
+
+  std::cout << " of " << filename << std::endl;  
+}
+
+void EmJetEventCount::SetFillOption(bool doFill)
+{
+  doFill_ = doFill;
+  std::cout << ( doFill_ ? "Turn on" : "Turn off" ) << " Histogram Fillings" << std::endl; 
+}
+
+void EmJetEventCount::SetPredictOption(bool doPredict)
+{
+  doPredict_ = doPredict;
+  std::cout << ( doPredict_ ? "Turn on" : "Turn off" ) << " Background Predictions" << std::endl;  
 }
 
 void EmJetEventCount::InitCrossSection(const EmJetSampleCollection& samplesColl)
@@ -389,7 +392,6 @@ void EmJetEventCount::PrepareFrCalVector(int ntimes)
       if( i!=0 ){
         if( i==1 )      fr_temp.SmearHistoBy1Sigma(true, 1);
         else if( i==2 ) fr_temp.SmearHistoBy1Sigma(true, -1);
-        //if( i<10 ) fr_temp.SmearFrHisto(true);
         else if( i<10 ) fr_temp.SmearFrHisto(true);
         else            fr_temp.SmearFrHisto(false);
       }
@@ -407,13 +409,31 @@ void EmJetEventCount::PrepareFrCalVector2(int ntimes)
   for(int i=0; i< ntimes; i++){
     if( i< 10 ) doprint = true;
     else doprint = false;
-    TH1F* hfrac1t = (TH1F*)hfrac1_->Clone((std::string(hfrac1_->GetName())+"_"+std::to_string(i)).c_str() );  SmearHisto(hfrac1t, doprint);
-    TH1F* hfrac2t = (TH1F*)hfrac2_->Clone((std::string(hfrac2_->GetName())+"_"+std::to_string(i)).c_str() );  SmearHisto(hfrac2t, doprint);
-    TH1F* hfr1t   = (TH1F*)hfr1_->Clone(  (std::string(hfr1_->GetName())  +"_"+std::to_string(i)).c_str() );  SmearHisto(hfr1t,   doprint);
-    TH1F* hfr2t   = (TH1F*)hfr2_->Clone(  (std::string(hfr2_->GetName())  +"_"+std::to_string(i)).c_str() );  SmearHisto(hfr2t,   doprint);
+    TH1F* hfrac1t = (TH1F*)hfrac1_->Clone((std::string(hfrac1_->GetName())+"_"+std::to_string(i)).c_str() );
+    TH1F* hfrac2t = (TH1F*)hfrac2_->Clone((std::string(hfrac2_->GetName())+"_"+std::to_string(i)).c_str() );
+    TH1F* hfr1t   = (TH1F*)hfr1_->Clone(  (std::string(hfr1_->GetName())  +"_"+std::to_string(i)).c_str() );
+    TH1F* hfr2t   = (TH1F*)hfr2_->Clone(  (std::string(hfr2_->GetName())  +"_"+std::to_string(i)).c_str() );
+    double bfrac0 = bfrac0_;
+    double bfrac1 = bfrac1_;
+    if( i!=0 ){
+      SmearHisto(hfrac1t, doprint);
+      SmearHisto(hfrac2t, doprint);
+      SmearHisto(hfr1t,   doprint);
+      SmearHisto(hfr2t,   doprint);
+      SmearNumber(bfrac0, err_bfrac0_);
+      SmearNumber(bfrac1, err_bfrac1_);
+      if( doprint ) std::cout << " bfraction " << bfrac0_ << " new " << bfrac0 << std::endl;
+      if( doprint ) std::cout << " bfraction " << bfrac1_ << " new " << bfrac1 << std::endl;
+    }
 
-    TH1F* histo0to1 = FrHistoCal(hfrac1t, hfrac2t, hfr1t, hfr2t, 0.05850600927, 0.0005308097885, "0to1");
-    TH1F* histo1to2 = FrHistoCal(hfrac1t, hfrac2t, hfr1t, hfr2t, 0.09730214808, 0.007174446111,  "1to2");
+    //TH1F* histo0to1 = FrHistoCal(hfrac1t, hfrac2t, hfr1t, hfr2t, 0.05850600927, 0.0005308097885, "0to1", (i!=0));
+    //TH1F* histo1to2 = FrHistoCal(hfrac1t, hfrac2t, hfr1t, hfr2t, 0.09730214808, 0.007174446111,  "1to2", (i!=0));
+    //TH1F* histo0to1 = FrHistoCal(hfrac1t, hfrac2t, hfr1t, hfr2t, 0.04638418944, 0.0003031444613, "0to1", (i!=0));
+    //TH1F* histo1to2 = FrHistoCal(hfrac1t, hfrac2t, hfr1t, hfr2t, 0.07017615034, 0.004006227246,  "1to2", (i!=0));
+    //TH1F* histo0to1 = FrHistoCal(hfrac1t, hfrac2t, hfr1t, hfr2t, 0.05837418267, 0.0005310752571, "0to1", (i!=0));
+    //TH1F* histo1to2 = FrHistoCal(hfrac1t, hfrac2t, hfr1t, hfr2t, 0.08858562553, 0.005888970821,  "1to2", (i!=0));
+    TH1F* histo0to1 = FrHistoCal(hfrac1t, hfrac2t, hfr1t, hfr2t, bfrac0, "0to1");
+    TH1F* histo1to2 = FrHistoCal(hfrac1t, hfrac2t, hfr1t, hfr2t, bfrac1, "1to2");
     vfrcal_temp0to1.push_back ( FrCal(histo0to1) );
     vfrcal_temp1to2.push_back ( FrCal(histo1to2) );
   } 

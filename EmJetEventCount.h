@@ -44,15 +44,12 @@ class EmJetEventCount : protected BaseClass
     void OpenOutputFile (string ofilename);
     void InitHistograms ();
     void WriteHistograms();
-    void SetOptions(string filename, const vector<string>& histoname, bool isData = false);
+    void SetOptions(string filename, const vector<string>& vFR, const vector<string>& v2frac, const vector<string>& v2FR, string sbfrac, bool isData = false);
     //virtual int SetTree(string ifilename) = 0;
     SET_MEMBER_DEFAULT(MaxEntries, long, nentries_max, -1);
+    void SetFillOption(bool doFill);
+    void SetPredictOption(bool doPredict);
     void LoopOverTrees (int ntimes = 1);
-
-    TH1F* hfrac1_;
-    TH1F* hfrac2_;
-    TH1F* hfr1_;
-    TH1F* hfr2_;
 
   protected:
     TFile* ofile_;
@@ -67,6 +64,8 @@ class EmJetEventCount : protected BaseClass
   private:
     unique_ptr<Histos> histo_;
     bool isData_;
+    bool doPredict_;
+    bool doFill_;
     vector<FrCal> vfrcal_; // vector of FrCal from input FR histograms
     vector<vector<FrCal>> vvfrcal_; // vector of smeared vector<FrCal> vfrcal_
     vector<vector<double>> vvn1tag_;
@@ -77,9 +76,21 @@ class EmJetEventCount : protected BaseClass
     double n2tag_;
     int fcurrent_;     // index of the current tree in the tchain
     double tweight_;   // weight of the current tree in the tchain
+    double bfrac0_; // b jet fraction in 0tag
+    double bfrac1_; // b jet fraction in 1tag
+    double err_bfrac0_; 
+    double err_bfrac1_; 
+
+    TH1F* hfrac1_;
+    TH1F* hfrac2_;
+    TH1F* hfr1_;
+    TH1F* hfr2_;
+
     void LoopOverEvent(long eventnumber, int ntimes);
+    void PredictBackground(int itime, int nJet_tag, bool isfillhisto);
     void FillEventCountHistos(int ntimes);
     void FillClosureTestHistos0To2Tag(double fr[], string tag);
+    void FillClosureTestHistos0To1Tag(double fr[], string tag);
     void FillClosureTestHistos1To2Tag(double fr[], string tag);
     void FillEventHistos(string tag, double weight);
     void FillEventHistos(string tag);

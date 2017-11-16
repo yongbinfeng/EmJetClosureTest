@@ -168,19 +168,16 @@ double PEmerging1tagTo2tag(double fr[], int ijet){
   return prob/2.0;
 }
 
-TH1F* FrHistoCal(TH1F* hfrac1, TH1F* hfrac2, TH1F* hfr1, TH1F* hfr2, double bfrac, double err_bfrac, string tag){
+TH1F* FrHistoCal(TH1F* hfrac1, TH1F* hfrac2, TH1F* hfr1, TH1F* hfr2, double bfrac, string tag){
   TH1F* hfr = (TH1F*)hfr1->Clone(("hfr_calc"+tag).c_str());
-
-  gRandom = new TRandom3(0);
-  double bfrac_temp = gRandom->Gaus(bfrac, err_bfrac);
 
   for(int i=1; i<= hfr1->GetNbinsX(); i++){  
     int ibinfrac = hfrac1->FindBin(hfr1->GetBinCenter(i));
 
-    double fb1 = 1.0 - hfrac1->GetBinContent(ibinfrac);
-    double fl1 = hfrac1->GetBinContent(ibinfrac);
-    double fb2 = 1.0 - hfrac2->GetBinContent(ibinfrac);
-    double fl2 = hfrac2->GetBinContent(ibinfrac);
+    double fb1 = hfrac1->GetBinContent(ibinfrac);
+    double fl1 = 1.0 - hfrac1->GetBinContent(ibinfrac);
+    double fb2 = hfrac2->GetBinContent(ibinfrac);
+    double fl2 = 1.0 - hfrac2->GetBinContent(ibinfrac);
     double FR1 = hfr1->GetBinContent(i);
     double FR2 = hfr2->GetBinContent(i);    
 
@@ -189,7 +186,7 @@ TH1F* FrHistoCal(TH1F* hfrac1, TH1F* hfrac2, TH1F* hfr1, TH1F* hfr2, double bfra
     double FR_b = ( norm*( fl2*FR1 - fl1*FR2)>=0.0 ?  norm*( fl2*FR1 - fl1*FR2) : 0.0 );
     double FR_l = ( norm*(-fb2*FR1 + fb1*FR2)>=0.0 ?  norm*(-fb2*FR1 + fb1*FR2) : 0.0 );
 
-    hfr->SetBinContent(i, FR_b * bfrac_temp + FR_l * (1-bfrac_temp));
+    hfr->SetBinContent(i, FR_b * bfrac + FR_l * (1-bfrac));
   }
   return hfr;
 } 
@@ -213,3 +210,8 @@ void SmearHisto(TH1F* histo, bool doprint, bool mustbepositive)
   }
 }
 
+void SmearNumber(double& val, double err)
+{
+  gRandom = new TRandom3(0);
+  val = gRandom->Gaus(val, err);
+}

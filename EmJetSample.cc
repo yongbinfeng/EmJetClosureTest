@@ -6,7 +6,7 @@ using std::getline;
 
 void PrintSampleCollection(const EmJetSampleCollection& samplesColl)
 {
-  std::cout << samplesColl.name << ", " << samplesColl.isData << ", number of EmJetSample" << samplesColl.samples.size() << std::endl;
+  std::cout << samplesColl.name << ", " << samplesColl.isData << ", number of EmJetSample " << samplesColl.samples.size() << std::endl;
   for(EmJetSample sample: samplesColl.samples){
     std::cout << "   sample " << sample.name << " " << sample.xsec << " " << sample.file << std::endl;
   }
@@ -24,8 +24,6 @@ ReadFromConfigFile(string configFileName, string isampleColl, EmJetSampleCollect
   }
   // Loop over sampleCollection configs
   for (string line : lines) {
-    std::cout << " line content " << line << std::endl;
-    // std::cout << "line: " << line << std::endl;
     vector<string> fields;
     LineToFields(line, fields);
     if (fields.empty()) {

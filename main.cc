@@ -36,6 +36,12 @@ int main(int argc, char *argv[])
         ValueArg<string> outputLabelArg("l", "outputlabel", "output label of the root file", false, "", "string");
         cmd.add( outputLabelArg );
 
+        ValueArg<int> doPredictArg("p", "dopredict", "Predict the number of background or not", false, 0, "int");
+        cmd.add( doPredictArg );
+
+        ValueArg<int> doFillHistoArg("f", "dofillhisto", "Fill different histograms or not", false, 0, "int");
+        cmd.add( doFillHistoArg );
+
 	      // Parse the args.
 	      cmd.parse( argc, argv );
 
@@ -44,11 +50,14 @@ int main(int argc, char *argv[])
 	      string ioutputDir  = outputDirArg.getValue();
         string isampleColl = sampleCollArg.getValue(); 
         int repeatedTime   = repeatedTimeArg.getValue(); 
-        string outputLabel    = outputLabelArg.getValue();
+        string outputLabel = outputLabelArg.getValue();
+        int doPredict      = doPredictArg.getValue();
+        int doFillHisto    = doFillHistoArg.getValue();
+        std::cout << "hahahahah " << doFillHisto << std::endl;
         std::cout << "Running on SampleCollection " << isampleColl << std::endl;
         time_t t = time(0);
         struct tm * now = localtime( & t );
-        string sampleCollDir = ioutputDir + "/" + std::to_string(now->tm_mon+1) + std::to_string(now->tm_mday) + std::to_string(now->tm_hour);
+        string sampleCollDir = ioutputDir;
         std::cout << "Creating directory: " << sampleCollDir << " for output"<< std::endl;
         string mkdir_command = "mkdir -p " + sampleCollDir;
         system(mkdir_command.c_str());
@@ -61,21 +70,25 @@ int main(int argc, char *argv[])
     
         // Process files if there are any to be processed
         EmJetEventCount hm(ejsamplesColl);
-        hm.OpenOutputFile(sampleCollDir+"/histo-"+isampleColl+"_result_"+ outputLabel+".root");
+        hm.OpenOutputFile(sampleCollDir+"/histo-"+isampleColl+"_result_"+ std::to_string(now->tm_mon+1) +std::to_string(now->tm_mday)+ "_" + outputLabel +".root");
         std::cout << "file opened successfully "<< std::endl;
-        //string ffr = "/data/users/fengyb/ClosureTest/TestClosure/FRHisto/result_fakerate.root";
         string ffr = ejsamplesColl.FrCalfile;
-        //vector<string> vhfr = {"fakerate_QCDMC_ptX", "fakerate_QCDMC_ptX_Lquark", "fakerate_QCDMC_ptX_Bquark", "fakerate_GJetMC_ptX", "fakerate_GJetMC_ptX_Lquark", "fakerate_GJetMC_ptX_Bquark", "FR_l_calc", "FR_b_calc", "fakerate_GJetMC_calc_1to2tag", "fakerate_QCDMC_truth_1to2tag"};
-        //vector<string> vhfr = {"fakerate_QCDMC_ptX", "fakerate_QCDMC_ptX_Lquark", "fakerate_QCDMC_ptX_Bquark", "fakerate_GJetMC_ptX", "fakerate_GJetMC_ptX_Lquark", "fakerate_GJetMC_ptX_Bquark", "FR_l_calc", "FR_b_calc"};
-        vector<string> vhfr = {"fakerate_QCDMC_ptX", "fakerate_QCDMC_ptX_Lquark", "fakerate_QCDMC_ptX_Bquark", "fakerate_GJetData_ptX", "fakerate_GJetMC_ptX_Lquark", "fakerate_GJetMC_ptX_Bquark", "FR_l_calc", "FR_b_calc", "fakerate_GJetData_calc_1to2tag", "fakerate_QCDMC_truth_1to2tag", "fakerate_GJetData_calc_0to1tag"};
+        vector<string> vhfr, v2frac, v2fr;
+        if( ejsamplesColl.isData ){
+          vhfr = {"Dfakerates/fakerate_GJetData"};
+          v2frac = {"fraction_GJetData_TypeVII", "fraction_GJetData_TypeVIII"};
+          v2fr   = {"fakerate_GJetData_TypeVII", "fakerate_GJetData_TypeVIII"};
+        }
+        else{
+          vhfr = {"Dfakerates/fakerate_GJetMC"};
+          v2frac = {"fraction_GJetMC_TypeVII", "fraction_GJetMC_TypeVIII"};
+          v2fr   = {"fakerate_GJetMC_TypeVII", "fakerate_GJetMC_TypeVIII"};
+        }
+        string bfractag = "bfraction_in_tags";
         // set basic info for closure test
-        hm.SetOptions(ffr, vhfr, ejsamplesColl.isData);
-        TFile *ffrac = new TFile("/data/users/fengyb/frcal/fitdistribution/root/test_csv_GJet_5mm_Data_v1.root");
-        hm.hfrac1_ = (TH1F*)(ffrac->Get("fraction_typeVII"));
-        hm.hfrac2_ = (TH1F*)(ffrac->Get("fraction_typeVIII"));
-        TFile *fFR = new TFile("/data/users/fengyb/frcal/gettruthinfo/root/result_fakerate_5mm_Data_v1.root");
-        hm.hfr1_ = (TH1F*)(fFR->Get("fakerate_GJetData_ptX_TypeVII"));
-        hm.hfr2_ = (TH1F*)(fFR->Get("fakerate_GJetData_ptX_TypeVIII"));
+        hm.SetFillOption(doFillHisto);
+        hm.SetPredictOption(doPredict);
+        hm.SetOptions(ffr, vhfr, v2frac, v2fr, bfractag, ejsamplesColl.isData);
         hm.LoopOverTrees(repeatedTime);
         hm.WriteHistograms();
         std::cout << "--------------------------finished--------------------------------\n";

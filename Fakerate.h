@@ -18,7 +18,8 @@ double P1tagTo2tag(double fr[]);
 double PEmergingnTag(double fr[], int nTag, int ijet);
 double PEmerging1tagTo2tag(double fr[], int ijet);
 void SmearHisto(TH1F* histo, bool doprint=false, bool mustbepositive= true);
-TH1F* FrHistoCal(TH1F* hfrac1, TH1F* hfrac2, TH1F* hfr1, TH1F* hfr2, double bfrac, double err_bfrac, string tag);
+void SmearNumber(double& val, double err);
+TH1F* FrHistoCal(TH1F* hfrac1, TH1F* hfrac2, TH1F* hfr1, TH1F* hfr2, double bfrac, string tag);
 
 class FrCal
 {
