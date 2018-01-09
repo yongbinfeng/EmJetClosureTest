@@ -1,2 +1,7 @@
 *.o
 *.pyc
+*.log
+*.out
+inputs/
+FRHisto/
+Result/
