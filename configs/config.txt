@@ -11,3 +11,4 @@ QCDMCOct16_5mm_A3D45           , MC      ,    /data/users/fengyb/ClosureTest/Tes
 QCDMCOct16_5mm_A3D45_HT1500    , MC      ,    /data/users/fengyb/ClosureTest/TestClosure/inputs/20170823/input_QCDOct16_cut5mm_HT1500.txt, /data/users/fengyb/frcal/makeFRhistos/result_fakerate_5mm_HT1500_A3D45.root
 JetHTOct16_5mm           , DATA     ,   /data/users/fengyb/ClosureTest/TestClosure/inputs/20170906/input_JetHTOct16_cut5mm.txt,  /data/users/fengyb/ClosureTest/TestClosure/FRHisto/result_fakerate_testOct16_5mm_Data_v1.root
 JetHTOct16_5mm_A3D45     , DATA     ,   /data/users/fengyb/ClosureTest/TestClosure/inputs/20171103/input_JetHTOct16_cut5mm.txt,  /data/users/fengyb/FRcal/result.root
+SignalModelB             , DATA     ,  /data/users/fengyb/ClosureTest/TestClosure/inputs/20171002/input_SignalModelB.txt, /data/users/fengyb/FRCal3/result/root/result_Data_CutSet9_v2.root

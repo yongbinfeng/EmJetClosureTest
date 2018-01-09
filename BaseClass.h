@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Thu Oct 12 10:27:36 2017 by ROOT version 6.06/01
+// Sun Jan  7 23:52:18 2018 by ROOT version 6.06/01
 // from TTree emJetSlimmedTree/emJetSlimmedTree
-// found on file: /data/users/fengyb/80Xresult/sntuples_QCD-test5mm/QCDHT2000ToInf/ntuple-QCDMC-QCDHT2000ToInf-test5mm-3.root
+// found on file: ntuple_QCDHT1000To1500.root
 //////////////////////////////////////////////////////////
 
 #ifndef BaseClass_h
@@ -31,6 +31,15 @@ public :
    Int_t           lumi;
    Int_t           nEmerging;
    Float_t         ht;
+   Float_t         pv_genreco_disXY;
+   Float_t         pv_genreco_disZ;
+   Float_t         pvtrack_fraction;
+   Float_t         pvtrack_fraction2;
+   Float_t         pvtrackpt_fraction;
+   Float_t         trackmeanz;
+   Float_t         trackfabsmeanz;
+   Float_t         pv0pt2sum;
+   Float_t         pv1pt2sum;
    vector<int>     *jet_index;
    vector<float>   *jet_pt;
    vector<float>   *jet_eta;
@@ -43,6 +52,16 @@ public :
    vector<float>   *jet_theta2D;
    vector<float>   *jet_csv;
    vector<bool>    *jet_isEmerging;
+   Float_t         pv_gen_x;
+   Float_t         pv_gen_y;
+   Float_t         pv_gen_z;
+   Float_t         pv_reco_x;
+   Float_t         pv_reco_y;
+   Float_t         pv_reco_z;
+   Float_t         pv_reco_zError;
+   Float_t         pv_reco_chi2;
+   Float_t         pv_reco_ndof;
+   Int_t           pv_reco_nTracks;
 
    // List of branches
    TBranch        *b_event;   //!
@@ -50,18 +69,37 @@ public :
    TBranch        *b_lumi;   //!
    TBranch        *b_nEmerging;   //!
    TBranch        *b_ht;   //!
+   TBranch        *b_pv_genreco_disXY;   //!
+   TBranch        *b_pv_genreco_disZ;   //!
+   TBranch        *b_pvtrack_fraction;   //!
+   TBranch        *b_pvtrack_fraction2;   //!
+   TBranch        *b_pvtrackpt_fraction;   //!
+   TBranch        *b_trackmeanz;   //!
+   TBranch        *b_trackfabsmeanz;   //!
+   TBranch        *b_pv0pt2sum;   //!
+   TBranch        *b_pv1pt2sum;   //!
    TBranch        *b_jet_index;   //!
    TBranch        *b_jet_pt;   //!
    TBranch        *b_jet_eta;   //!
    TBranch        *b_jet_phi;   //!
    TBranch        *b_jet_nTrack;   //!
-   TBranch        *b_jet_nTrackPostCut; //!
+   TBranch        *b_jet_nTrackPostCut;   //!
    TBranch        *b_jet_flavour;   //!
    TBranch        *b_jet_Alpha3DSig;   //!
    TBranch        *b_jet_medianIP;   //!
    TBranch        *b_jet_theta2D;   //!
-   TBranch        *b_jet_csv;       //!
+   TBranch        *b_jet_csv;   //!
    TBranch        *b_jet_isEmerging;   //!
+   TBranch        *b_pv_gen_x;   //!
+   TBranch        *b_pv_gen_y;   //!
+   TBranch        *b_pv_gen_z;   //!
+   TBranch        *b_pv_reco_x;   //!
+   TBranch        *b_pv_reco_y;   //!
+   TBranch        *b_pv_reco_z;   //!
+   TBranch        *b_pv_reco_zError;   //!
+   TBranch        *b_pv_reco_chi2;   //!
+   TBranch        *b_pv_reco_ndof;   //!
+   TBranch        *b_pv_reco_nTracks;   //!
 
    BaseClass(TTree *tree=0);
    virtual ~BaseClass();
@@ -140,6 +178,15 @@ void BaseClass::Init(TTree *tree)
    fChain->SetBranchAddress("lumi", &lumi, &b_lumi);
    fChain->SetBranchAddress("nEmerging", &nEmerging, &b_nEmerging);
    fChain->SetBranchAddress("ht", &ht, &b_ht);
+   fChain->SetBranchAddress("pv_genreco_disXY", &pv_genreco_disXY, &b_pv_genreco_disXY);
+   fChain->SetBranchAddress("pv_genreco_disZ", &pv_genreco_disZ, &b_pv_genreco_disZ);
+   fChain->SetBranchAddress("pvtrack_fraction", &pvtrack_fraction, &b_pvtrack_fraction);
+   fChain->SetBranchAddress("pvtrack_fraction2", &pvtrack_fraction2, &b_pvtrack_fraction2);
+   fChain->SetBranchAddress("pvtrackpt_fraction", &pvtrackpt_fraction, &b_pvtrackpt_fraction);
+   fChain->SetBranchAddress("trackmeanz", &trackmeanz, &b_trackmeanz);
+   fChain->SetBranchAddress("trackfabsmeanz", &trackfabsmeanz, &b_trackfabsmeanz);
+   fChain->SetBranchAddress("pv0pt2sum", &pv0pt2sum, &b_pv0pt2sum);
+   fChain->SetBranchAddress("pv1pt2sum", &pv1pt2sum, &b_pv1pt2sum);
    fChain->SetBranchAddress("jet_index", &jet_index, &b_jet_index);
    fChain->SetBranchAddress("jet_pt", &jet_pt, &b_jet_pt);
    fChain->SetBranchAddress("jet_eta", &jet_eta, &b_jet_eta);
@@ -152,6 +199,16 @@ void BaseClass::Init(TTree *tree)
    fChain->SetBranchAddress("jet_theta2D", &jet_theta2D, &b_jet_theta2D);
    fChain->SetBranchAddress("jet_csv", &jet_csv, &b_jet_csv);
    fChain->SetBranchAddress("jet_isEmerging", &jet_isEmerging, &b_jet_isEmerging);
+   fChain->SetBranchAddress("pv_gen_x", &pv_gen_x, &b_pv_gen_x);
+   fChain->SetBranchAddress("pv_gen_y", &pv_gen_y, &b_pv_gen_y);
+   fChain->SetBranchAddress("pv_gen_z", &pv_gen_z, &b_pv_gen_z);
+   fChain->SetBranchAddress("pv_reco_x", &pv_reco_x, &b_pv_reco_x);
+   fChain->SetBranchAddress("pv_reco_y", &pv_reco_y, &b_pv_reco_y);
+   fChain->SetBranchAddress("pv_reco_z", &pv_reco_z, &b_pv_reco_z);
+   fChain->SetBranchAddress("pv_reco_zError", &pv_reco_zError, &b_pv_reco_zError);
+   fChain->SetBranchAddress("pv_reco_chi2", &pv_reco_chi2, &b_pv_reco_chi2);
+   fChain->SetBranchAddress("pv_reco_ndof", &pv_reco_ndof, &b_pv_reco_ndof);
+   fChain->SetBranchAddress("pv_reco_nTracks", &pv_reco_nTracks, &b_pv_reco_nTracks);
    Notify();
 }
 

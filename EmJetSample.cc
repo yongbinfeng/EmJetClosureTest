@@ -123,7 +123,7 @@ FieldsToSampleCollection(const vector<string>& ifields, EmJetSampleCollection& s
   }
   bool found_root = ( ifields[3].find(".root") != string::npos );
   if ( found_root ){
-    std::cout << " Fakerate histograms se to " << ifields[3] << std::endl;
+    std::cout << " Fakerate histograms set to " << ifields[3] << std::endl;
     samplesColl.FrCalfile = ifields[3];
   }
   else{

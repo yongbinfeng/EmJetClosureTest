@@ -19,7 +19,9 @@ double PEmergingnTag(double fr[], int nTag, int ijet);
 double PEmerging1tagTo2tag(double fr[], int ijet);
 void SmearHisto(TH1F* histo, bool doprint=false, bool mustbepositive= true);
 void SmearNumber(double& val, double err);
-TH1F* FrHistoCal(TH1F* hfrac1, TH1F* hfrac2, TH1F* hfr1, TH1F* hfr2, double bfrac, string tag);
+TH1F* FrHistoCal(TH1F* hfrac1, TH1F* hfrac2, TH1F* hfr1, TH1F* hfr2, double bfrac, string tag, int& icase);
+TH1F* FrHistoAdd(TH1F* hfrb, TH1F* hfrl, double bfrac, string tag);
+double GetRawFakerate(int nTrack, bool isBJet);
 
 class FrCal
 {

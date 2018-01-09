@@ -76,13 +76,13 @@ int main(int argc, char *argv[])
         vector<string> vhfr, v2frac, v2fr;
         if( ejsamplesColl.isData ){
           vhfr = {"Dfakerates/fakerate_GJetData"};
-          v2frac = {"fraction_GJetData_TypeVII", "fraction_GJetData_TypeVIII"};
-          v2fr   = {"fakerate_GJetData_TypeVII", "fakerate_GJetData_TypeVIII"};
+          v2frac = {"fraction_GJetData_TypeVI", "fraction_GJetData_TypeV"};
+          v2fr   = {"fakerate_GJetData_TypeVI", "fakerate_GJetData_TypeV"};
         }
         else{
           vhfr = {"Dfakerates/fakerate_GJetMC"};
-          v2frac = {"fraction_GJetMC_TypeVII", "fraction_GJetMC_TypeVIII"};
-          v2fr   = {"fakerate_GJetMC_TypeVII", "fakerate_GJetMC_TypeVIII"};
+          v2frac = {"fraction_GJetMC_TypeVI", "fraction_GJetMC_TypeV"};
+          v2fr   = {"fakerate_GJetMC_TypeVI", "fakerate_GJetMC_TypeV"};
         }
         string bfractag = "bfraction_in_tags";
         // set basic info for closure test

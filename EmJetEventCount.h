@@ -17,6 +17,8 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include <tuple>
+#include "TLorentzVector.h"
 
 #include "EmJetHistos.h"
 #include "EmJetSample.h"
@@ -71,6 +73,8 @@ class EmJetEventCount : protected BaseClass
     vector<vector<double>> vvn1tag_;
     vector<vector<double>> vvn2tag_; 
     vector<double> vtreexsec_;
+    vector<int> vcase1tag_;
+    vector<int> vcase2tag_;
     long TotalEvents_;
     double n1tag_;
     double n2tag_;
@@ -86,6 +90,14 @@ class EmJetEventCount : protected BaseClass
     TH1F* hfr1_;
     TH1F* hfr2_;
 
+    TH1F* hQfr_;
+    TH1F* hQfrb_;
+    TH1F* hQfrl_;
+    TH1F* hGfrb_;
+    TH1F* hGfrl_; 
+    TH1F* hGCfrb_;
+    TH1F* hGCfrl_;
+
     void LoopOverEvent(long eventnumber, int ntimes);
     void PredictBackground(int itime, int nJet_tag, bool isfillhisto);
     void FillEventCountHistos(int ntimes);
@@ -96,15 +108,20 @@ class EmJetEventCount : protected BaseClass
     void FillEventHistos(string tag);
     void FillJetFlavourHistos(int ij, string tag, double weight);
     void FillJetHistos(int ij, string tag, double weight);
+    void FillMassHistos(int ijem1, int ijem2, string tag, double weight);
+    std::pair<double, double> GetInvariantMass(int ijem1, int ijem2, int ijsm1, int ijsm2);
+    vector<double> GetInvariantMass2(int ijem1, int ijem2, int ijsm1, int ijsm2);
     void PrintOutResults();
     void PrintResultwithError(const vector<double> &vresult);
     double CalculateTreeWeight(int treenumber, long eventnumber);
     void PrepareNewTree();
     void PrepareFrCalVector(int ntimes);
     void PrepareFrCalVector2(int ntimes);
+    void PrepareTruthFrCalVector(int ntimes);
     void PrepareFrCalResults(int ntimes);
     void InitCrossSection(const EmJetSampleCollection& samplesColl);
     bool IsChainValid();
+    void PrintOutInfo();
 };
 
 #endif
