@@ -95,11 +95,8 @@ void EmJetFrHistos::PrepareTwoTypeVector()
     TH1F* htemp_frGJetI  = SmearHisto(hfrGJetI_,  i);
     TH1F* htemp_frGJetII = SmearHisto(hfrGJetII_, i);
 
-    double bfrac0 = bfrac0_;
-    double bfrac1 = bfrac1_;
-
-    SmearNumber(bfrac0,  err_bfrac0_, i);
-    SmearNumber(bfrac1,  err_bfrac1_, i);
+    double bfrac0 = SmearNumber(bfrac0_,  err_bfrac0_, i);
+    double bfrac1 = SmearNumber(bfrac1_,  err_bfrac1_, i);
 
     TH1F* histo0to1 = FrHistoCal(htemp_fracGJetI, htemp_fracGJetII, htemp_frGJetI, htemp_frGJetII, bfrac0, "0to1",  i);
     TH1F* histo1to2 = FrHistoCal(htemp_fracGJetI, htemp_fracGJetII, htemp_frGJetI, htemp_frGJetII, bfrac1, "1to2",  i);
@@ -125,8 +122,8 @@ void EmJetFrHistos::PrepareTruthFrCalVector()
     TH1F* htemp_frGJetB = SmearHisto(hfrGJetB_,  i);   
     TH1F* htemp_frGJetL = SmearHisto(hfrGJetL_,  i); 
   
-    double bfrac0 = SmearNumber(bfrac0,  err_bfrac0_,  i);
-    double bfrac1 = SmearNumber(bfrac1,  err_bfrac1_,  i);
+    double bfrac0 = SmearNumber(bfrac0_,  err_bfrac0_,  i);
+    double bfrac1 = SmearNumber(bfrac1_,  err_bfrac1_,  i);
 
     TH1F* histoGT0to1 = FrHistoAdd( htemp_frGJetB, htemp_frGJetL, bfrac0, "GJet_0to1", i);
     TH1F* histoGT1to2 = FrHistoAdd( htemp_frGJetB, htemp_frGJetL, bfrac1, "GJet_1to2", i);
