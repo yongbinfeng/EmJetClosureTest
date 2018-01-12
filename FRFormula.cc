@@ -1,77 +1,9 @@
-#include "Fakerate.h"
-
-FrCal::FrCal(): histo_(0), histoname_(""), nbins_(0)
-{
-}
-
-FrCal::FrCal(string filename, string histoname)
-{
-  TFile *file = new TFile(filename.c_str());  
-  histo_ = (TH1F*)file->Get(histoname.c_str())->Clone((histoname + "_").c_str());
-  histoname_ = histoname;
-  nbins_ = histo_->GetNbinsX();
-}
-
-FrCal::FrCal(TH1F* hfr)
-{
-  histo_ = hfr;
-  histoname_ = hfr->GetName();
-  nbins_ = histo_->GetNbinsX();
-}
-
-void FrCal::SmearFrHisto(bool doprint)
-{
-  SmearHisto(histo_, doprint);
-}
-
-void FrCal::SmearHistoBy1Sigma(bool doprint, int sign)
-{
-  if( doprint ){
-    std::cout << "Start smearing the fakerate histogram " << histoname_ << " with Gaussian" << std::endl;
-  }
-  int Sign = sign/abs(sign);
-  for(int ibin = 1; ibin <= histo_->GetNbinsX(); ibin++){
-    double newval = histo_->GetBinContent(ibin) + Sign *histo_->GetBinError(ibin);
-    newval = newval>=0.0 ? newval : 0.0;
-    newval = newval<=1.0 ? newval : 1.0;
-    if( doprint ){
-      std::cout << " bin " << std::setw(2) << ibin << " gets smeared from " << std::setw(12) << histo_->GetBinContent(ibin) << " +/- "<< std::setw(14) << std::left << histo_->GetBinError(ibin) << " to " << std::setw(15) << std::left << newval << std::endl;
-    }
-    histo_->SetBinContent(ibin, newval);
-  } 
-}
-
-FrCal FrCal::Clone(string histoname)
-{
-  FrCal ofr;
-  ofr.histo_ = (TH1F*)histo_->Clone(histoname.c_str());
-  ofr.nbins_ = nbins_;
-  ofr.histoname_ = histoname;
-  return ofr;
-}
-
-double FrCal::GetFakerate(int nTrack) const
-{
-  int ibin = histo_->FindBin(nTrack);
-  double fr = -1.0;
-  if( ibin<=nbins_ ){
-    fr = histo_->GetBinContent(ibin);
-  }
-  else{
-    fr = histo_->GetBinContent(nbins_); // overflow, use the fakerate from the maximum bin
-  }
-  return fr;
-}
-
-string FrCal::GetHistoName()
-{
-  return histoname_;
-}
+#include "FRFormula.h"
 
 //
 // calculate the probability/weight of one event with fr[4] and nTags
 //
-double PnTag(double fr[], int nTag){
+double FRFormula::PnTag(double fr[], int nTag){
   /*
   if( fr[0]<0.0 || fr[1]<0.0 || fr[2]<0.0 || fr[3]<0.0 ){
     std::cout << "Error! Fakerate arrays not calculated correctly" << std::endl;
@@ -106,7 +38,7 @@ double PnTag(double fr[], int nTag){
 // 
 // Calculate the probability/weight when predicting from 1-tag to 2-tag
 //
-double P1tagTo2tag(double fr[]){
+double FRFormula::P1tagTo2tag(double fr[]){
   double p1tagto2tag = 0;
   p1tagto2tag  =   fr[0]   * (1-fr[1]) * (1-fr[2]);
   p1tagto2tag += (1-fr[0]) *   fr[1]   * (1-fr[2]);
@@ -118,7 +50,7 @@ double P1tagTo2tag(double fr[]){
 // compute the probability/weight of ijet is tagged as emerging
 // in the nTag case(nTag = 0, 1, 2)
 //
-double PEmergingnTag(double fr[], int nTag, int ijet){
+double FRFormula::PEmergingnTag(double fr[], int nTag, int ijet){
   if( ijet >=4 ) {
     std::cout << " Error: jet index out when calculating Emerging probability" << std::endl; 
     return 0;
@@ -157,10 +89,10 @@ double PEmergingnTag(double fr[], int nTag, int ijet){
 }
 
 //
-// compuute the probability/weight of ijet is tagged as emerging
+// compute the probability/weight of ijet is tagged as emerging
 // when predicting from 1tag to 2tag
 //
-double PEmerging1tagTo2tag(double fr[], int ijet){
+double FRFormula::PEmerging1tagTo2tag(double fr[], int ijet){
   if( ijet>=3 ) {
     std::cout<< " Error: input jet index problem !!!" << std::endl;
     return -1;
@@ -173,9 +105,8 @@ double PEmerging1tagTo2tag(double fr[], int ijet){
   return prob/2.0;
 }
 
-TH1F* FrHistoCal(TH1F* hfrac1, TH1F* hfrac2, TH1F* hfr1, TH1F* hfr2, double bfrac, string tag, int& icase){
-  TH1F* hfr = (TH1F*)hfr1->Clone(("hfr_calc"+tag).c_str());
-  bool isSetZero = false;
+TH1F* FRFormula::FrHistoCal(TH1F* hfrac1, TH1F* hfrac2, TH1F* hfr1, TH1F* hfr2, double bfrac, std::string tag, int idx){
+  TH1F* hfr = (TH1F*)hfr1->Clone(("hfr_calc"+tag+"_"+std::to_string(idx)).c_str());
 
   for(int i=1; i<= hfr1->GetNbinsX(); i++){  
     int ibinfrac = hfrac1->FindBin(hfr1->GetBinCenter(i));
@@ -191,36 +122,16 @@ TH1F* FrHistoCal(TH1F* hfrac1, TH1F* hfrac2, TH1F* hfr1, TH1F* hfr2, double bfra
     double FR_b = norm*( fl2*FR1 - fl1*FR2);
     double FR_l = norm*(-fb2*FR1 + fb1*FR2);
 
-    //double FR_b = ( norm*( fl2*FR1 - fl1*FR2)>=0.0 ?  norm*( fl2*FR1 - fl1*FR2) : 0.0 ); //FR_b = ( FR_b > 1.0 ? 1.: FR_b);
-    //double FR_l = ( norm*(-fb2*FR1 + fb1*FR2)>=0.0 ?  norm*(-fb2*FR1 + fb1*FR2) : 0.0 ); //FR_l = ( FR_l > 1.0 ? 1.: FR_l);
-
-    //if( !isSetZero && i==1 && FR_b>1.0 ){
-       // set the fakerate histogram to zero if there is any un-physical bin with track multiplicity < 16
-    //  isSetZero = true;
-    //}
-    //FR_b = ( FR_b>=0.0 ? FR_b : 0.0); FR_b = ( FR_b<=1.0 ? FR_b : 1.0);
-    //FR_l = ( FR_l>=0.0 ? FR_l : 0.0); FR_l = ( FR_l<=1.0 ? FR_l : 1.0);
-    if( i<=3 && i>=2 && ( FR_b>1.0 || FR_b<0.0 || FR_l>1.0 || FR_l<0.0) ){
-      icase = 2; 
-    }
+    FR_b = ( FR_b>=0.0 ? FR_b : 0.0); FR_b = ( FR_b<=1.0 ? FR_b : 1.0);
+    FR_l = ( FR_l>=0.0 ? FR_l : 0.0); FR_l = ( FR_l<=1.0 ? FR_l : 1.0);
 
     hfr->SetBinContent(i, FR_b * bfrac + FR_l * (1-bfrac));
-    if( !isSetZero && i<=3 && ((FR_b*bfrac+FR_l*(1-bfrac))<0.0 || (FR_b*bfrac+FR_l*(1-bfrac))>1.0 )){
-      isSetZero = true;
-      icase = 3;
-      std::cout << " bin "<< i << " Fakerate(B) " << FR_b << " Fakerate(L) " << FR_l << std::endl;
-    }
-  }
-  if( isSetZero ){
-    for(int i=1; i<= hfr->GetNbinsX(); i++){
-      hfr->SetBinContent(i, 0.0);
-    }
   }
   return hfr;
 } 
 
-TH1F* FrHistoAdd(TH1F* hfrb, TH1F* hfrl, double bfrac, string tag){
-  TH1F* hfr = (TH1F*)hfrb->Clone(("hfr_add"+tag).c_str());
+TH1F* FRFormula::FrHistoAdd(TH1F* hfrb, TH1F* hfrl, double bfrac, std::string tag, int idx){
+  TH1F* hfr = (TH1F*)hfrb->Clone(("hfr_add"+tag+"_"+std::to_string(idx)).c_str());
 
   for(int i=1; i<= hfrb->GetNbinsX(); i++){
 
@@ -232,32 +143,23 @@ TH1F* FrHistoAdd(TH1F* hfrb, TH1F* hfrl, double bfrac, string tag){
   return hfr;
 }
 
-void SmearHisto(TH1F* histo, bool doprint, bool mustbepositive)
+double FRFormula::GetFR(TH1F* hfr, int nTrack)
 {
-  if( doprint ){
-    std::cout << "Start smearing the histogram " << histo->GetName() << " with Gaussian" << std::endl;
+  int ibin = hfr->FindBin(nTrack);
+  double FR = 0.0;
+  if( ibin>0 && ibin<=hfr->GetNbinsX() ){
+    FR = hfr->GetBinContent(ibin); 
   }
-  gRandom = new TRandom3(0);
-  for(int ibin = 1; ibin <= histo->GetNbinsX(); ibin++){
-    double newval = gRandom->Gaus( histo->GetBinContent(ibin), histo->GetBinError(ibin));
-    if( mustbepositive ){
-      newval = newval>=0.0 ? newval : 0.0;
-      newval = newval<=1.0 ? newval : 1.0;
-    }
-    if( doprint ){
-      std::cout << " bin " << std::setw(2) << ibin << " gets smeared from " << std::setw(12) << histo->GetBinContent(ibin) << " +/- "<< std::setw(14) << std::left << histo->GetBinError(ibin) << " to " << std::setw(15) << std::left << newval << std::endl;
-    }
-    histo->SetBinContent(ibin, newval);
+  else{
+    // Overflow, use the results from maximum bin
+    FR = hfr->GetBinContent(hfr->GetNbinsX());
+    //std::cout << " Warning: Over/Under flow for " << hfr->GetName() << " with nTrack " << nTrack << std::endl;
+    //std::cout << "    use maximum bin result " << std::endl;
   }
+  return FR;
 }
 
-void SmearNumber(double& val, double err)
-{
-  gRandom = new TRandom3(0);
-  val = gRandom->Gaus(val, err);
-}
-
-double GetRawFakerate(int nTrack, bool isBJet)
+double FRFormula::GetRawFakerate(int nTrack, bool isBJet)
 {
   double fakerate = 0.0;
   if( isBJet ){

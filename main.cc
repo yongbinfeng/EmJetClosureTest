@@ -69,27 +69,11 @@ int main(int argc, char *argv[])
         PrintSampleCollection(ejsamplesColl);
     
         // Process files if there are any to be processed
-        EmJetEventCount hm(ejsamplesColl);
+        EmJetEventCount hm(ejsamplesColl, doFillHisto, doPredict, repeatedTime);
         hm.OpenOutputFile(sampleCollDir+"/histo-"+isampleColl+"_result_"+ std::to_string(now->tm_mon+1) +std::to_string(now->tm_mday)+ "_" + outputLabel +".root");
         std::cout << "file opened successfully "<< std::endl;
-        string ffr = ejsamplesColl.FrCalfile;
-        vector<string> vhfr, v2frac, v2fr;
-        if( ejsamplesColl.isData ){
-          vhfr = {"Dfakerates/fakerate_GJetData"};
-          v2frac = {"fraction_GJetData_TypeVI", "fraction_GJetData_TypeV"};
-          v2fr   = {"fakerate_GJetData_TypeVI", "fakerate_GJetData_TypeV"};
-        }
-        else{
-          vhfr = {"Dfakerates/fakerate_GJetMC"};
-          v2frac = {"fraction_GJetMC_TypeVI", "fraction_GJetMC_TypeV"};
-          v2fr   = {"fakerate_GJetMC_TypeVI", "fakerate_GJetMC_TypeV"};
-        }
-        string bfractag = "bfraction_in_tags";
         // set basic info for closure test
-        hm.SetFillOption(doFillHisto);
-        hm.SetPredictOption(doPredict);
-        hm.SetOptions(ffr, vhfr, v2frac, v2fr, bfractag, ejsamplesColl.isData);
-        hm.LoopOverTrees(repeatedTime);
+        hm.LoopOverTrees();
         hm.WriteHistograms();
         std::cout << "--------------------------finished--------------------------------\n";
 
