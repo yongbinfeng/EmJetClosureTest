@@ -33,31 +33,26 @@ void EmJetEventCount::LoopOverEvent(long eventnumber)
   int nJet_tag = 0;
   //double ht4 = (*jet_pt)[0] + (*jet_pt)[1] + (*jet_pt)[2] + (*jet_pt)[3];
   //if( ht4< 1500.0 ) return;
-  //int nJet_Alpha3DSig_zero=0;
+  int nJet_Alpha3DSig_zero=0;
 
   for (unsigned ij = 0; ij < (*jet_pt).size(); ij++) {
     if( (*jet_isEmerging)[ij] ) nJet_tag++;
-    //if( (*jet_Alpha3DSig)[ij]<0.45 && (*jet_medianIP)[ij]>0.05 ) nJet_tag++;
-    //if( (*jet_Alpha3DSig)[ij]<1e-6 ) nJet_Alpha3DSig_zero++;
+    //if( (*jet_Alpha3DSig)[ij]<0.4 && (*jet_medianIP)[ij]>0.05 ) nJet_tag++;
+    //if( (*jet_Alpha3DSig)[ij]<0.5 && (*jet_medianIP)[ij]>0.1 ) nJet_tag++;
+    if( (*jet_Alpha3DSig)[ij]<1e-6 ) nJet_Alpha3DSig_zero++;
   }
 
   //if( nJet_Alpha3DSig_zero>2 ) return;
-  histo_->hist1d["pv_genreco_disXY"]->Fill(pv_genreco_disXY, tweight_);
-  histo_->hist1d["pv_genreco_disZ" ]->Fill(fabs(pv_genreco_disZ), tweight_);
-
-  if( nJet_tag==1 ) {
+  if( nJet_tag==1 ){
     n1tag_ += tweight_;
-    histo_->hist1d["pv_genreco_disXY_1tag"]->Fill(pv_genreco_disXY, tweight_);
-    histo_->hist1d["pv_genreco_disZ_1tag" ]->Fill(fabs(pv_genreco_disZ), tweight_);
   }
   if( nJet_tag==2 ){
     n2tag_ += tweight_;
     //PrintOutInfo();
-    histo_->hist1d["pv_genreco_disXY_2tag"]->Fill(pv_genreco_disXY, tweight_);
-    histo_->hist1d["pv_genreco_disZ_2tag" ]->Fill(fabs(pv_genreco_disZ), tweight_);
   }
-
   histo_->hist1d["nJet_tag"]->Fill(nJet_tag, tweight_);
+
+  FillPVHistos(nJet_tag);
  
   if( doFill_ ){ 
     FillEventHistos("");
@@ -84,15 +79,31 @@ void EmJetEventCount::PredictBackground(int itime, int nJet_tag, bool isfillhist
 
   // from 0tag
   if( nJet_tag==0 ){
-    double afr1[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet 0to1tag
-    double afr3[4] = {-1.0, -1.0, -1.0, -1.0}; // results from QCD truth 0to1tag
-    double afr5[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet truth 0to1tag 
-    //double afr9[4] = {-1.0, -1.0, -1.0, -1.0}; // results from QCD using truth flavor
+    double afr1[4]  = {-1.0, -1.0, -1.0, -1.0}; // results from GJet 0to1tag
+    double afr3[4]  = {-1.0, -1.0, -1.0, -1.0}; // results from QCD overall
+    double afr5[4]  = {-1.0, -1.0, -1.0, -1.0}; // results from GJet truth 0to1tag 
+    double afr7[4]  = {-1.0, -1.0, -1.0, -1.0}; // results from QCD truth 0to1tag
+    double afr9[4]  = {-1.0, -1.0, -1.0, -1.0}; // result from GJet TF 0to1tag
+    double afr11[4] = {-1.0, -1.0, -1.0, -1.0}; // result from GJet TTF 0to1tag
+    double afr13[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet un-scaled 0to1tag, in principle should be the same as GJet 0to1tag
+    double afr15[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet scaled L and unscaled b 0to1tag
+    double afr17[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet scaled L and b 0to1tag
 
     for( int ij=0; ij<4; ij++){
-      afr1[ij] = GetFR(histoFR_->histoFR1d["GJet0To1"][itime],   (*jet_nTrackPostCut)[ij]);
+      afr1[ij] = GetFR(histoFR_->histoFR1d["GJet0To1"][itime],     (*jet_nTrackPostCut)[ij]);
       afr3[ij] = GetFR(histoFR_->histoFR1d["QCDOverall"][itime],   (*jet_nTrackPostCut)[ij]);
-      afr5[ij] = GetFR(histoFR_->histoFR1d["GJetT0To1"][itime],  (*jet_nTrackPostCut)[ij]);
+      afr5[ij] = GetFR(histoFR_->histoFR1d["GJetT0To1"][itime],    (*jet_nTrackPostCut)[ij]);
+      afr7[ij] = GetFR(histoFR_->histoFR1d["QCDT0To1"][itime],     (*jet_nTrackPostCut)[ij]);      
+      if( itime==0 ) {
+        // calculate systematics, only for the 1st run
+        //  since we don't need to run the systematics with toy-MC
+        afr9[ij]  = GetFR(histoFR_->histoFR1d["GJetTF0To1"][itime],   (*jet_nTrackPostCut)[ij]);      
+        afr11[ij] = GetFR(histoFR_->histoFR1d["GJetTTF0To1"][itime],  (*jet_nTrackPostCut)[ij]);
+
+        afr13[ij] = GetFR(histoFR_->histoFR1d["GJetCalc0To1"][itime], (*jet_nTrackPostCut)[ij]);
+        afr15[ij] = GetFR(histoFR_->histoFR1d["GJetCalcScaleL0To1"][itime], (*jet_nTrackPostCut)[ij]);
+        afr17[ij] = GetFR(histoFR_->histoFR1d["GJetCalcScaleBL0To1"][itime], (*jet_nTrackPostCut)[ij]);
+      }
 
       /*
       if( (*jet_flavour)[ij]==5 || (*jet_flavour)[ij]==19 || (*jet_flavour)[ij]==10 ) {
@@ -107,12 +118,21 @@ void EmJetEventCount::PredictBackground(int itime, int nJet_tag, bool isfillhist
     vvn1tag_[1][itime] += PnTag(afr1, 1) * tweight_;
     vvn1tag_[2][itime] += PnTag(afr3, 1) * tweight_;
     vvn1tag_[3][itime] += PnTag(afr5, 1) * tweight_;
+    vvn1tag_[4][itime] += PnTag(afr7, 1) * tweight_;
+    if( itime==0 ){
+      vvn1tag_[5][itime] += PnTag(afr9,  1) * tweight_;
+      vvn1tag_[6][itime] += PnTag(afr11, 1) * tweight_;
+      vvn1tag_[7][itime] += PnTag(afr13, 1) * tweight_;
+      vvn1tag_[8][itime] += PnTag(afr15, 1) * tweight_;
+      vvn1tag_[9][itime] += PnTag(afr17, 1) * tweight_;  
+    }
 
     if( isfillhisto ) {
       FillClosureTestHistos0To1Tag(afr0, "__GJetOverallPredicted0To1Tag");
       FillClosureTestHistos0To1Tag(afr1, "__GJetCalcPredicted0To1Tag");
-      FillClosureTestHistos0To1Tag(afr3, "__QCDTruthPredicted0To1Tag");
       FillClosureTestHistos0To1Tag(afr5, "__GJetTruthPredicted0To1Tag");
+      FillClosureTestHistos0To1Tag(afr7, "__QCDTruthPredicted0To1Tag");
+      FillClosureTestHistos0To1Tag(afr11, "__GJetCalcTFPredicted0To1Tag");
     }
   }
 
@@ -121,23 +141,46 @@ void EmJetEventCount::PredictBackground(int itime, int nJet_tag, bool isfillhist
     double afr2[3] = {-1.0, -1.0, -1.0};
     double afr4[3] = {-1.0, -1.0, -1.0};
     double afr6[3] = {-1.0, -1.0, -1.0}; 
+    double afr10[3] = {-1.0, -1.0, -1.0};
+    double afr12[3] = {-1.0, -1.0, -1.0};
+    double afr14[3] = {-1.0, -1.0, -1.0};
+    double afr16[3] = {-1.0, -1.0, -1.0};
+    double afr18[3] = {-1.0, -1.0, -1.0};
     int ijet=0;
     for(int ij=0; ij<4; ij++){
       if( (*jet_isEmerging)[ij] ) continue;// skip the emerging jet
-      //if( (*jet_Alpha3DSig)[ij]<0.45 && (*jet_medianIP)[ij]>0.05 ) continue;
-      afr2[ijet] = GetFR(histoFR_->histoFR1d["GJet1To2"][itime],   (*jet_nTrackPostCut)[ij]);// 1to2tag
-      afr4[ijet] = GetFR(histoFR_->histoFR1d["QCDT1To2"][itime],   (*jet_nTrackPostCut)[ij]);// 1to2tag QCD truth
-      afr6[ijet] = GetFR(histoFR_->histoFR1d["GJetT1To2"][itime],  (*jet_nTrackPostCut)[ij]);// 1to2tag GJet truth
+      //if( (*jet_Alpha3DSig)[ij]<0.4 && (*jet_medianIP)[ij]>0.05 ) continue;
+      //if( (*jet_Alpha3DSig)[ij]<0.5 && (*jet_medianIP)[ij]>0.1 ) continue;
+      afr2[ijet]  = GetFR(histoFR_->histoFR1d["GJet1To2"][itime],    (*jet_nTrackPostCut)[ij]);// 1to2tag
+      afr4[ijet]  = GetFR(histoFR_->histoFR1d["QCDT1To2"][itime],    (*jet_nTrackPostCut)[ij]);// 1to2tag QCD truth
+      afr6[ijet]  = GetFR(histoFR_->histoFR1d["GJetT1To2"][itime],   (*jet_nTrackPostCut)[ij]);// 1to2tag GJet truth
+      if( itime==0 ){
+        afr10[ijet] = GetFR(histoFR_->histoFR1d["GJetTF1To2"][itime],  (*jet_nTrackPostCut)[ij]);// 1to2tagTF GJet
+        afr12[ijet] = GetFR(histoFR_->histoFR1d["GJetTTF1To2"][itime], (*jet_nTrackPostCut)[ij]);// 1to2tagTTF GJet
+        afr14[ijet] = GetFR(histoFR_->histoFR1d["GJetCalc1To2"][itime], (*jet_nTrackPostCut)[ij]);// 1to2tag Unscaled b light, in principle should be the same as 1to2tag
+        afr16[ijet] = GetFR(histoFR_->histoFR1d["GJetCalcScaleL1To2"][itime], (*jet_nTrackPostCut)[ij]);// 1to2tag scaled light and unscaled b
+        afr18[ijet] = GetFR(histoFR_->histoFR1d["GJetCalcScaleBL1To2"][itime], (*jet_nTrackPostCut)[ij]);// 1to2tag scaled light and b
+      }
       ijet++;
     }
     vvn2tag_[1][itime] += P1tagTo2tag(afr2) * tweight_;
     vvn2tag_[2][itime] += P1tagTo2tag(afr4) * tweight_;
     vvn2tag_[3][itime] += P1tagTo2tag(afr6) * tweight_;
+    if( itime==0 ) {
+      vvn2tag_[5][itime] += P1tagTo2tag(afr10)* tweight_;
+      vvn2tag_[6][itime] += P1tagTo2tag(afr12)* tweight_;
+      vvn2tag_[7][itime] += P1tagTo2tag(afr14)* tweight_;
+      vvn2tag_[8][itime] += P1tagTo2tag(afr16)* tweight_;
+      vvn2tag_[9][itime] += P1tagTo2tag(afr18)* tweight_;
+    }
+
+   histo_->hist1d_double["nJet_tagP"]->Fill(2.0, P1tagTo2tag(afr2) * tweight_);
 
     if( isfillhisto ) {
-      FillClosureTestHistos1To2Tag(afr2, "__GJetCalcPredicted1To2Tag");
-      FillClosureTestHistos1To2Tag(afr4, "__QCDTruthPredicted1To2Tag");
-      FillClosureTestHistos1To2Tag(afr6, "__GJetTruthPredicted1To2Tag");
+      FillClosureTestHistos1To2Tag(afr2,  "__GJetCalcPredicted1To2Tag");
+      FillClosureTestHistos1To2Tag(afr4,  "__QCDTruthPredicted1To2Tag");
+      FillClosureTestHistos1To2Tag(afr6,  "__GJetTruthPredicted1To2Tag");
+      FillClosureTestHistos1To2Tag(afr12, "__GJetCalcTFPredicted1To2Tag");
     }
   }
 }
@@ -175,12 +218,14 @@ void EmJetEventCount::FillClosureTestHistos1To2Tag(double fr[], string tag)
   int ijem1 = 0;
   for(unsigned ij=0; ij<(*jet_pt).size(); ij++){
     if( (*jet_isEmerging)[ij] ) ijem1 = ij;
-    //if( (*jet_Alpha3DSig)[ij]<0.45 && (*jet_medianIP)[ij]>0.05 ) ijem1 = ij;
+    //if( (*jet_Alpha3DSig)[ij]<0.4 && (*jet_medianIP)[ij]>0.05 ) ijem1 = ij;
+    //if( (*jet_Alpha3DSig)[ij]<0.5 && (*jet_medianIP)[ij]>0.1 ) ijem1 = ij;
   }
   for(unsigned ij=0; ij<(*jet_pt).size(); ij++){
     ht4 += (*jet_pt)[ij];
     if( (*jet_isEmerging)[ij] ){
-    //if( (*jet_Alpha3DSig)[ij]<0.45 && (*jet_medianIP)[ij]>0.05 ){
+    //if( (*jet_Alpha3DSig)[ij]<0.4 && (*jet_medianIP)[ij]>0.05 ){
+    //if( (*jet_Alpha3DSig)[ij]<0.5 && (*jet_medianIP)[ij]>0.1 ){
       FillJetHistos(ij, "__Emerging"+tag, tweight_*prob);
      iemj = 1;
     }
@@ -198,6 +243,29 @@ void EmJetEventCount::FillClosureTestHistos1To2Tag(double fr[], string tag)
   histo_->hist1d["ht"+tag]->Fill(ht4, tweight_*prob);
 }
 
+// fill PV related histograms
+void EmJetEventCount::FillPVHistos(int njtag)
+{
+  histo_->hist1d["pv_genreco_disXY"]->Fill(pv_genreco_disXY, tweight_);
+  histo_->hist1d["pv_genreco_disZ" ]->Fill(fabs(pv_genreco_disZ), tweight_);
+  histo_->hist1d["pvtrack_fraction"]->Fill(pvtrack_fraction, tweight_);
+  if( fabs(pv_genreco_disZ)<0.01 ){// PV reco success
+    histo_->hist1d["pvtrack_fraction_s"]->Fill(pvtrack_fraction, tweight_);
+  }
+  else{
+    histo_->hist1d["pvtrack_fraction_f"]->Fill(pvtrack_fraction, tweight_);
+  }
+
+  if( njtag==1 ) {
+    histo_->hist1d["pv_genreco_disXY_1tag"]->Fill(pv_genreco_disXY, tweight_);
+    histo_->hist1d["pv_genreco_disZ_1tag" ]->Fill(fabs(pv_genreco_disZ), tweight_);
+  }
+  if( njtag==2 ){
+    histo_->hist1d["pv_genreco_disXY_2tag"]->Fill(pv_genreco_disXY, tweight_);
+    histo_->hist1d["pv_genreco_disZ_2tag" ]->Fill(fabs(pv_genreco_disZ), tweight_);
+  } 
+}
+
 void EmJetEventCount::FillEventHistos(string tag, double weight)
 {
   double ht4=0;
@@ -206,7 +274,8 @@ void EmJetEventCount::FillEventHistos(string tag, double weight)
     ht4 += (*jet_pt)[ij];
     FillJetFlavourHistos(ij, tag, weight);
     if( (*jet_isEmerging)[ij] ){
-    //if( (*jet_Alpha3DSig)[ij]<0.45 && (*jet_medianIP)[ij]>0.05 ){
+    //if( (*jet_Alpha3DSig)[ij]<0.4 && (*jet_medianIP)[ij]>0.05 ){
+    //if( (*jet_Alpha3DSig)[ij]<0.5 && (*jet_medianIP)[ij]>0.1 ){
       FillJetFlavourHistos(ij, "__Emerging"+tag, weight); 
       if( ijem1!=-1 ) ijem2 = ij;
       else ijem1 = ij;
@@ -316,6 +385,11 @@ void EmJetEventCount::FillEventCountHistos()
     histo_->hist1d["n1tag__2"]->Fill(vvn1tag_[2][itime]);
     histo_->hist1d["n1tag__3"]->Fill(vvn1tag_[3][itime]);
     histo_->hist1d["n1tag__4"]->Fill(vvn1tag_[4][itime]);
+    histo_->hist1d["n1tag__5"]->Fill(vvn1tag_[5][itime]);
+    histo_->hist1d["n1tag__6"]->Fill(vvn1tag_[6][itime]);
+    histo_->hist1d["n1tag__7"]->Fill(vvn1tag_[7][itime]);
+    histo_->hist1d["n1tag__8"]->Fill(vvn1tag_[8][itime]);
+    histo_->hist1d["n1tag__9"]->Fill(vvn1tag_[9][itime]);
     if( vcase1tag_[itime]==1 )      histo_->hist1d["N1tag_case1__1"]->Fill(vvn1tag_[1][itime]);
     else if( vcase1tag_[itime]==2 ) histo_->hist1d["N1tag_case2__1"]->Fill(vvn1tag_[1][itime]);
   }
@@ -326,6 +400,11 @@ void EmJetEventCount::FillEventCountHistos()
     histo_->hist1d["n1tag_EM1__2"]->Fill(vvn1tag_[2][itime]);
     histo_->hist1d["n1tag_EM1__3"]->Fill(vvn1tag_[3][itime]);
     histo_->hist1d["n1tag_EM1__4"]->Fill(vvn1tag_[4][itime]);
+    histo_->hist1d["n1tag_EM1__5"]->Fill(vvn1tag_[5][itime]);
+    histo_->hist1d["n1tag_EM1__6"]->Fill(vvn1tag_[6][itime]);
+    histo_->hist1d["n1tag_EM1__7"]->Fill(vvn1tag_[7][itime]);
+    histo_->hist1d["n1tag_EM1__8"]->Fill(vvn1tag_[8][itime]);
+    histo_->hist1d["n1tag_EM1__9"]->Fill(vvn1tag_[9][itime]);
   }
 
   // fill the number of events with 2 tags
@@ -335,6 +414,11 @@ void EmJetEventCount::FillEventCountHistos()
     histo_->hist1d["n2tag__2"]->Fill(vvn2tag_[2][itime]);
     histo_->hist1d["n2tag__3"]->Fill(vvn2tag_[3][itime]);
     histo_->hist1d["n2tag__4"]->Fill(vvn2tag_[4][itime]);
+    histo_->hist1d["n2tag__5"]->Fill(vvn2tag_[5][itime]);
+    histo_->hist1d["n2tag__6"]->Fill(vvn2tag_[6][itime]);
+    histo_->hist1d["n2tag__7"]->Fill(vvn2tag_[7][itime]);
+    histo_->hist1d["n2tag__8"]->Fill(vvn2tag_[8][itime]);
+    histo_->hist1d["n2tag__9"]->Fill(vvn2tag_[9][itime]);
     if( vcase2tag_[itime]==1 )      histo_->hist1d["N2tag_case1__1"]->Fill(vvn1tag_[1][itime]);
     else if( vcase2tag_[itime]==2 ) histo_->hist1d["N2tag_case2__1"]->Fill(vvn1tag_[1][itime]);
   }
@@ -349,11 +433,12 @@ void EmJetEventCount::PrintOutResults()
   std::cout << "Total number of 2tag events predicted(GJet Calc)    : "; PrintResultwithError(vvn2tag_[1]);
   std::cout << "Total number of 2tag events predicted(QCD truth)    : "; PrintResultwithError(vvn2tag_[2]);
   std::cout << "Total number of 2tag events predicted(GJet truth)   : "; PrintResultwithError(vvn2tag_[3]);
-  std::cout << "Total number of 2tag events predicted(GJet calc)    : "; PrintResultwithError(vvn2tag_[4]);
-  std::cout << "Total number of 2tag events predicted(QCD truth tr) : "; PrintResultwithError(vvn2tag_[5]);
-  std::cout << "Total number of 2tag events predicted(GJet truth tr): "; PrintResultwithError(vvn2tag_[6]);
-  std::cout << "Total number of 2tag events predicted(QCD truth tr pt): "; PrintResultwithError(vvn2tag_[7]);
-  std::cout << "Total number of 2tag events predicted(QCD raw input): "; PrintResultwithError(vvn2tag_[8]);
+  std::cout << "Total number of 2tag events predicted               : "; PrintResultwithError(vvn2tag_[4]);
+  std::cout << "Total number of 2tag events predicted(GJet Calc TF) : "; PrintResultwithError(vvn2tag_[5]);
+  std::cout << "Total number of 2tag events predicted               : "; PrintResultwithError(vvn2tag_[6]);
+  std::cout << "Total number of 2tag events predicted               : "; PrintResultwithError(vvn2tag_[7]);
+  std::cout << "Total number of 2tag events predicted               : "; PrintResultwithError(vvn2tag_[8]);
+  std::cout << "Total number of 2tag events predicted               : "; PrintResultwithError(vvn2tag_[9]);
   std::cout << "------------------------------------------------" << std::endl;
   std::cout << "Total number of 1tag events observed:  "  << n1tag_         << std::endl;
   std::cout << "Total numebr of 1tag events observed:  "  << histo_->hist1d["nJet_tag"]->GetBinContent(2)  << "+/-"<< histo_->hist1d["nJet_tag"]->GetBinError(2)<< std::endl;
@@ -366,6 +451,7 @@ void EmJetEventCount::PrintOutResults()
   std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[6]);
   std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[7]);
   std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[8]);
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[9]);
   std::cout << std::endl;
 }
 

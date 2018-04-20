@@ -75,6 +75,7 @@ class EmJetEventCount : public EventCountBase
     void FillClosureTestHistos0To2Tag(double fr[], string tag);
     void FillClosureTestHistos0To1Tag(double fr[], string tag);
     void FillClosureTestHistos1To2Tag(double fr[], string tag);
+    void FillPVHistos(int njtag);
     void FillEventHistos(string tag, double weight);
     void FillEventHistos(string tag);
     void FillJetFlavourHistos(int ij, string tag, double weight);

@@ -54,15 +54,32 @@ void EmJetFrHistos::PrepareFrVector()
   PrepareOverallFrVector();
   PrepareTwoTypeVector();
   PrepareTruthFrCalVector();    
+  PrepareScaledFrCalVector();
   std::cout << "  All fakerate and fraction histograms set up..." << std::endl;
 }
 
 void EmJetFrHistos::PrepareBFractions()
 {
-  TH1F* hfracB = (TH1F*)ffr_->Get("bfraction_in_tags");
-  bfrac0_ = hfracB->GetBinContent(1); err_bfrac0_ = hfracB->GetBinError(1);
-  bfrac1_ = hfracB->GetBinContent(2); err_bfrac1_ = hfracB->GetBinError(2);
-  std::cout << " B jet fractions read from bfraction_in_tags, finished..." << std::endl;
+  bfrac0_ = err_bfrac0_ = bfrac1_ = err_bfrac1_ = bfrac0MC_ = bfrac1MC_ = 0;
+
+  if( DataType_=="MC" ){
+    std::cout << " B jet fractions read from bfraction_in_tags_MC " << std::endl;
+    TH1F* hfracBMC = (TH1F*)ffr_->Get("bfraction_in_tags_MC");
+    bfrac0_ = hfracBMC->GetBinContent(1); err_bfrac0_ = hfracBMC->GetBinError(1);
+    bfrac1_ = hfracBMC->GetBinContent(2); err_bfrac1_ = hfracBMC->GetBinError(2);
+  }
+  else{
+    std::cout << " B jet fractions read from bfraction_in_tags_Data " << std::endl;
+    TH1F* hfracBData = (TH1F*)ffr_->Get("bfraction_in_tags_Data");
+    bfrac0_ = hfracBData->GetBinContent(1); err_bfrac0_ = hfracBData->GetBinError(1);
+    bfrac1_ = hfracBData->GetBinContent(2); err_bfrac1_ = hfracBData->GetBinError(2);
+  }
+
+  // for data, still need the b jet fractions in MC, for comparison and systematic study
+  TH1F* hfracBMC = (TH1F*)ffr_->Get("bfraction_in_tags_MC");
+  bfrac0MC_ = hfracBMC->GetBinContent(1);
+  bfrac1MC_ = hfracBMC->GetBinContent(2);
+  std::cout << " b jet fraction read finshed.." << std::endl;
 }
 
 void EmJetFrHistos::PrepareOverallFrVector()
@@ -83,10 +100,14 @@ void EmJetFrHistos::PrepareOverallFrVector()
 void EmJetFrHistos::PrepareTwoTypeVector()
 {
   // GJet fakerate from type I and type II
-  hfrGJetI_    = GetHisto("fakerate_GJet"+DataType_+"_TypeVI");
-  hfrGJetII_   = GetHisto("fakerate_GJet"+DataType_+"_TypeV");
-  hfracGJetI_  = GetHisto("fraction_GJet"+DataType_+"_TypeVI");
-  hfracGJetII_ = GetHisto("fraction_GJet"+DataType_+"_TypeV");
+  hfrGJetI_     = GetHisto("fakerate_GJet"+DataType_+"_TypeVI");
+  hfrGJetII_    = GetHisto("fakerate_GJet"+DataType_+"_TypeV");
+  hfracGJetI_   = GetHisto("fraction_GJet"+DataType_+"_TypeVI");
+  hfracGJetII_  = GetHisto("fraction_GJet"+DataType_+"_TypeV");
+ 
+  // truth b jet fraction in sample I and II
+  hfracTGJetI_  = GetHisto("Dfractions/fraction_GJetMC_BJet_TypeVI");
+  hfracTGJetII_ = GetHisto("Dfractions/fraction_GJetMC_BJet_TypeV");  
 
   for(int i=0; i<ntimes_; i++){
     TH1F* htemp_fracGJetI  = SmearHisto(hfracGJetI_,  i);
@@ -98,11 +119,30 @@ void EmJetFrHistos::PrepareTwoTypeVector()
     double bfrac0 = SmearNumber(bfrac0_,  err_bfrac0_, i);
     double bfrac1 = SmearNumber(bfrac1_,  err_bfrac1_, i);
 
+    // Calculate the averaged fakerate from sample1,2 and b fraction 1,2 directly, instead of using calculated b/light jet fakerate
     TH1F* histo0to1 = FrHistoCal(htemp_fracGJetI, htemp_fracGJetII, htemp_frGJetI, htemp_frGJetII, bfrac0, "0to1",  i);
     TH1F* histo1to2 = FrHistoCal(htemp_fracGJetI, htemp_fracGJetII, htemp_frGJetI, htemp_frGJetII, bfrac1, "1to2",  i);
     histoFR1d["GJet0To1"].push_back(histo0to1);
     histoFR1d["GJet1To2"].push_back(histo1to2);
   }
+
+  /*
+ * Blow are for systematic calculation, one absolute number should be enough 
+ * does not need toy-MC(smearing) to calculate the uncertainty 
+  */
+
+  // fakerate calculated using truth b jet fraction of type I and II
+  TH1F* histo0to1TF = FrHistoCal(hfracTGJetI_, hfracTGJetII_, hfrGJetI_, hfrGJetII_, bfrac0_, "TF0To1",  0);
+  TH1F* histo1to2TF = FrHistoCal(hfracTGJetI_, hfracTGJetII_, hfrGJetI_, hfrGJetII_, bfrac1_, "TF1To2",  0);
+  histoFR1d["GJetTF0To1"].push_back(histo0to1TF);
+  histoFR1d["GJetTF1To2"].push_back(histo1to2TF);
+
+  // fakerate calculated using truth b jet fraction of type I and II and truth b jet fraction in QCD
+  TH1F* histo0to1TTF = FrHistoCal(hfracTGJetI_, hfracTGJetII_, hfrGJetI_, hfrGJetII_, bfrac0MC_, "TTF0To1",  0);
+  TH1F* histo1to2TTF = FrHistoCal(hfracTGJetI_, hfracTGJetII_, hfrGJetI_, hfrGJetII_, bfrac1MC_, "TTF1To2",  0);
+  histoFR1d["GJetTTF0To1"].push_back(histo0to1TTF);
+  histoFR1d["GJetTTF1To2"].push_back(histo1to2TTF);
+
   std::cout << "  Two types of GJet fakerate and fraction histograms set up..." << std::endl;
 }
 
@@ -138,6 +178,40 @@ void EmJetFrHistos::PrepareTruthFrCalVector()
     histoFR1d["QCDT1To2"].push_back(histoQT1to2);
   } 
   std::cout << "  Truth B jet and light jet fakerate histograms in GJet and QCD samples set up..." << std::endl;
+}
+
+void EmJetFrHistos::PrepareScaledFrCalVector()
+{
+  // this function should be called after calling PrepareTruthFrCalVector because 
+  // it needs the truth fakerate histograms hfrQCDB_, hfrQCDL_, hfrGJetB_, hfrGJetL_
+
+  // this is also designed for systematics section, no nead to smear it for toy-MCs
+  hfrGJetBCalc_ = GetHisto("fakerate_GJetData_BJet_calc");
+  hfrGJetLCalc_ = GetHisto("fakerate_GJetData_LightJet_calc");
+  
+  TH1F* hfrGJetBCalcScaled = FrHistoScale(hfrGJetBCalc_, hfrQCDB_, hfrGJetB_, "CalcScaledBJet", 0); 
+  TH1F* hfrGJetLCalcScaled = FrHistoScale(hfrGJetLCalc_, hfrQCDL_, hfrGJetL_, "CalcScaledLJet", 0);
+
+  // average of unscaled fake rate
+  TH1F* hfrGJetUnScaled0To1  = FrHistoAdd( hfrGJetBCalc_,     hfrGJetLCalc_,      bfrac0_, "GJetCalcUnScaled_0to1", 0);
+  TH1F* hfrGJetUnScaled1To2  = FrHistoAdd( hfrGJetBCalc_,     hfrGJetLCalc_,      bfrac1_, "GJetCalcUnScaled_1to2", 0);
+
+  // average of unscaled b and scaled light fakerates
+  TH1F* hfrGJetScaledL0To1   = FrHistoAdd( hfrGJetBCalc_,     hfrGJetLCalcScaled, bfrac0_, "GJetCalcScaleL_0to1",   0);  
+  TH1F* hfrGJetScaledL1To2   = FrHistoAdd( hfrGJetBCalc_,     hfrGJetLCalcScaled, bfrac1_, "GJetCalcScaleL_1to2",   0);  
+
+  // averaged of scaled b and scaled light fakerates
+  TH1F* hfrGJetScaledBL0To1 = FrHistoAdd( hfrGJetBCalcScaled, hfrGJetLCalcScaled, bfrac0_, "GJetCalcScaleBL_0to1",  0);  
+  TH1F* hfrGJetScaledBL1To2 = FrHistoAdd( hfrGJetBCalcScaled, hfrGJetLCalcScaled, bfrac1_, "GJetCalcScaleBL_1to2",  0);
+
+  histoFR1d["GJetCalc0To1"].push_back( hfrGJetUnScaled0To1 );
+  histoFR1d["GJetCalc1To2"].push_back( hfrGJetUnScaled1To2 );
+
+  histoFR1d["GJetCalcScaleL0To1"].push_back( hfrGJetScaledL0To1 );
+  histoFR1d["GJetCalcScaleL1To2"].push_back( hfrGJetScaledL1To2 );
+
+  histoFR1d["GJetCalcScaleBL0To1"].push_back( hfrGJetScaledBL0To1 );
+  histoFR1d["GJetCalcScaleBL1To2"].push_back( hfrGJetScaledBL1To2 );
 }
 
 TH1F* EmJetFrHistos::GetHisto(string hname)

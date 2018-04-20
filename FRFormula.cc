@@ -143,6 +143,24 @@ TH1F* FRFormula::FrHistoAdd(TH1F* hfrb, TH1F* hfrl, double bfrac, std::string ta
   return hfr;
 }
 
+TH1F* FRFormula::FrHistoScale(TH1F* hfrO, TH1F* hfrNum, TH1F* hfrDen, std::string tag, int idx)
+{
+  TH1F* hfr = (TH1F*)hfrO->Clone(("hfr_scaled"+tag+"_"+std::to_string(idx)).c_str());
+
+  for(int i=1; i<=hfrO->GetNbinsX(); i++){
+    if( hfrDen->GetBinContent(i)!=0.0 ){
+      double ratio = hfrNum->GetBinContent(i)/hfrDen->GetBinContent(i);
+      hfr->SetBinContent(i, ratio* hfrO->GetBinContent(i));
+    }
+    else{
+      if( idx==0 ){
+        std::cout << " Deminator equals 0 for Bin " << i << " in histogram " << hfrDen->GetName() << std::endl;
+      }
+    }
+  }
+  return hfr;
+}
+
 double FRFormula::GetFR(TH1F* hfr, int nTrack)
 {
   int ibin = hfr->FindBin(nTrack);

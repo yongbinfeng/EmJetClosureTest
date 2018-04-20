@@ -30,6 +30,7 @@ class EmJetFrHistos
    void PrepareOverallFrVector();   
    void PrepareTwoTypeVector(); 
    void PrepareTruthFrCalVector();
+   void PrepareScaledFrCalVector();
    
    TH1F* GetHisto(string hname);
       
@@ -46,14 +47,28 @@ class EmJetFrHistos
 
    // Pointer to the fakerate root file 
    TFile* ffr_;
-
+   
+   // Overall fake rate
    TH1F *hfrGJet_,  *hfrQCD_;
+
    TH1F *hfrGJetI_, *hfrGJetII_, *hfracGJetI_, *hfracGJetII_; 
+
+   // MC Truth fake rate
    TH1F *hfrGJetB_, *hfrGJetL_,  *hfrQCDB_, *hfrQCDL_;
+
+   // MC Truth b jet fractions, need to use them ins systematics calculation
+   TH1F *hfracTGJetI_, *hfracTGJetII_;
+
+   // Calulated b jet and light jet fakerate in the fakerate root file
+   //  in principle, should be the same as the ones calculated from sample I, II
+   //   if different, probably because the requirements are slightly different, 
+   //   i.e range between 0 and 1, what to do if fakerates are close...blabla
+   TH1F *hfrGJetBCalc_, *hfrGJetLCalc_;
+
 
    double bfrac0_, bfrac1_;
    double err_bfrac0_, err_bfrac1_;
-
+   double bfrac0MC_, bfrac1MC_;
 };
 
 #endif

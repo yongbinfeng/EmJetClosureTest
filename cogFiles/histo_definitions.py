@@ -39,6 +39,9 @@ def user_define_histos():
     name = 'pv_genreco_disZ_2tag'      ; histo_dict[name] = Histo1F(name , Bins( 10 , 0   , 0.01 ) )
     name = 'pv_genreco_disXY_2tag_ex0' ; histo_dict[name] = Histo1F(name , Bins( 10 , 0   , 0.01 ) )
     name = 'pv_genreco_disZ_2tag_ex0'  ; histo_dict[name] = Histo1F(name , Bins( 10 , 0   , 0.01 ) )
+    name = 'pvtrack_fraction'          ; histo_dict[name] = Histo1F(name , Bins(100 , 0   , 1.0  ) )
+    name = 'pvtrack_fraction_f'        ; histo_dict[name] = Histo1F(name , Bins(100 , 0   , 1.0  ) )
+    name = 'pvtrack_fraction_s'        ; histo_dict[name] = Histo1F(name , Bins(100 , 0   , 1.0  ) )
     name = 'mass'                      ; histo_dict[name] = Histo1F(name , Bins(100 , 0   , 2000 ) )
     name = 'mass1'                     ; histo_dict[name] = Histo1F(name , Bins(100 , 0   , 2000 ) )
     name = 'jet_pt'                    ; histo_dict[name] = Histo1F(name , Bins(150 , 0   , 1500 ) )
@@ -54,6 +57,7 @@ def user_define_histos():
     name = 'n1tag'                     ; histo_dict[name] = Histo1F(name , Bins(500 ,  0  ,  50000 ) )
     name = 'n1tag_EM1'                 ; histo_dict[name] = Histo1F(name , Bins(500 ,  0  ,   500 ) )
     name = 'n2tag'                     ; histo_dict[name] = Histo1F(name , Bins(400 ,  0  ,   400 ) )
+    name = 'nJet_tagP'                 ; histo_dict[name] = Histo1D(name , Bins( 10 ,  0  ,   10 ) )
     name = 'N1tag_case1__1'            ; histo_dict[name] = Histo1F(name , Bins(500 ,  0  ,  50000 ) )
     name = 'N1tag_case2__1'            ; histo_dict[name] = Histo1F(name , Bins(500 ,  0  ,  50000 ) )
     name = 'N2tag_case1__1'            ; histo_dict[name] = Histo1F(name , Bins(400 ,  0  ,   400 ) )
@@ -101,12 +105,17 @@ def user_define_histos():
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='GJetTruthPredicted0To1Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
+            histo_clone = clone_object(histo, postfix='GJetCalcTFPredicted0To1Tag')
+            histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='GJetCalcPredicted1To2Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='QCDTruthPredicted1To2Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='GJetTruthPredicted1To2Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
+            histo_clone = clone_object(histo, postfix='GJetCalcTFPredicted1To2Tag')
+            histo_clone_dict[histo_clone.name] = histo_clone
+
     histo_dict.update(histo_clone_dict)
 
     '''
@@ -158,12 +167,16 @@ def generate_histo_map_init():
 def calculate_index(histo_dict):
     """Takes histo_dict and calculates index in vectors based on their order in dictionary and their type (1D vs 2D)"""
     index_1d = 0
+    index_1d_double = 0
     index_2d = 0
     histo_id_dict = OrderedDict()
     for name, histo in histo_dict.iteritems():
         if type(histo).__name__ == 'Histo1F':
             histo_id_dict[name] = index_1d
             index_1d += 1
+        if type(histo).__name__ == 'Histo1D':
+            histo_id_dict[name] = index_1d_double
+            index_1d_double += 1
         elif type(histo).__name__ == 'Histo2F':
             histo_id_dict[name] = index_2d
             index_2d += 1
