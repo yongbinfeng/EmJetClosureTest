@@ -39,6 +39,8 @@ def user_define_histos():
     name = 'pv_genreco_disZ_2tag'      ; histo_dict[name] = Histo1F(name , Bins( 10 , 0   , 0.01 ) )
     name = 'pv_genreco_disXY_2tag_ex0' ; histo_dict[name] = Histo1F(name , Bins( 10 , 0   , 0.01 ) )
     name = 'pv_genreco_disZ_2tag_ex0'  ; histo_dict[name] = Histo1F(name , Bins( 10 , 0   , 0.01 ) )
+    name = 'pv0pt2sum'                 ; histo_dict[name] = Histo1F(name , Bins(100 , 0   , 2e5  ) )
+    name = 'pv1pt2sum'                 ; histo_dict[name] = Histo1F(name , Bins(100 , 0   , 1e4  ) )
     name = 'pvtrack_fraction'          ; histo_dict[name] = Histo1F(name , Bins(100 , 0   , 1.0  ) )
     name = 'pvtrack_fraction_f'        ; histo_dict[name] = Histo1F(name , Bins(100 , 0   , 1.0  ) )
     name = 'pvtrack_fraction_s'        ; histo_dict[name] = Histo1F(name , Bins(100 , 0   , 1.0  ) )
@@ -53,6 +55,12 @@ def user_define_histos():
     name = 'jet_nTrackPostCut_pt2'     ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,  100 ) )
     name = 'jet_nTrackPostCut_pt3'     ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,  100 ) )
     name = 'jet_csv'                   ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,   1. ) )
+    name = 'jet_pT0'                   ; histo_dict[name] = Histo1F(name , Bins(150 ,  0. , 1500 ) )
+    name = 'jet_pT1'                   ; histo_dict[name] = Histo1F(name , Bins(150 ,  0. , 1500 ) )
+    name = 'jet_pT2'                   ; histo_dict[name] = Histo1F(name , Bins(150 ,  0. , 1500 ) )
+    name = 'jet_pT3'                   ; histo_dict[name] = Histo1F(name , Bins(150 ,  0. , 1500 ) )
+    name = 'jet_medianIP'              ; histo_dict[name] = Histo1F(name , Bins( 70 , -5. ,   2. ) )
+    name = 'jet_Alpha3DSig'            ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,   1. ) )
     name = 'nJet_tag'                  ; histo_dict[name] = Histo1F(name , Bins( 10 ,  0  ,   10 ) )
     name = 'n1tag'                     ; histo_dict[name] = Histo1F(name , Bins(500 ,  0  ,  50000 ) )
     name = 'n1tag_EM1'                 ; histo_dict[name] = Histo1F(name , Bins(500 ,  0  ,   500 ) )
@@ -72,6 +80,7 @@ def user_define_histos():
     histo_dict.update(histo_clone_dict)
         
     # Jet plot variations
+    '''
     histo_clone_dict = OrderedDict()
     for name, histo in histo_dict.iteritems():
         if name[:4]=='jet_':
@@ -80,12 +89,23 @@ def user_define_histos():
             histo_clone = clone_object(histo, postfix='L')
             histo_clone_dict[histo_clone.name] = histo_clone
     histo_dict.update(histo_clone_dict)
+    '''
 
     for name, histo in histo_dict.iteritems():
         if name[:4]=='jet_':
             histo_clone = clone_object(histo, postfix='Emerging')
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='Standard')
+            histo_clone_dict[histo_clone.name] = histo_clone
+    histo_dict.update(histo_clone_dict)
+
+    for name, histo in histo_dict.iteritems():
+        if name == 'pv0pt2sum' or name == 'pv1pt2sum':
+            histo_clone = clone_object(histo, postfix='0tag')
+            histo_clone_dict[histo_clone.name] = histo_clone
+            histo_clone = clone_object(histo, postfix='1tag')
+            histo_clone_dict[histo_clone.name] = histo_clone
+            histo_clone = clone_object(histo, postfix='2tag')
             histo_clone_dict[histo_clone.name] = histo_clone
     histo_dict.update(histo_clone_dict)
 
@@ -97,24 +117,30 @@ def user_define_histos():
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='2tag')
             histo_clone_dict[histo_clone.name] = histo_clone
+            '''
             histo_clone = clone_object(histo, postfix='GJetOverallPredicted0To1Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
+            '''
             histo_clone = clone_object(histo, postfix='GJetCalcPredicted0To1Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
+            '''
             histo_clone = clone_object(histo, postfix='QCDTruthPredicted0To1Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='GJetTruthPredicted0To1Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='GJetCalcTFPredicted0To1Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
+            '''
             histo_clone = clone_object(histo, postfix='GJetCalcPredicted1To2Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
+            '''
             histo_clone = clone_object(histo, postfix='QCDTruthPredicted1To2Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='GJetTruthPredicted1To2Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='GJetCalcTFPredicted1To2Tag')
             histo_clone_dict[histo_clone.name] = histo_clone
+            '''
 
     histo_dict.update(histo_clone_dict)
 

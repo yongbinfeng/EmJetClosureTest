@@ -30,6 +30,7 @@ EmJetEventCount::EmJetEventCount(EmJetSampleCollection samplesColl, bool doFillH
 void EmJetEventCount::LoopOverEvent(long eventnumber)
 {
   if( pvtrack_fraction<0.1 ) return;
+  //if( pv1pt2sum > 1500.0 ) return;
   int nJet_tag = 0;
   //double ht4 = (*jet_pt)[0] + (*jet_pt)[1] + (*jet_pt)[2] + (*jet_pt)[3];
   //if( ht4< 1500.0 ) return;
@@ -128,11 +129,11 @@ void EmJetEventCount::PredictBackground(int itime, int nJet_tag, bool isfillhist
     }
 
     if( isfillhisto ) {
-      FillClosureTestHistos0To1Tag(afr0, "__GJetOverallPredicted0To1Tag");
+      //FillClosureTestHistos0To1Tag(afr0, "__GJetOverallPredicted0To1Tag");
       FillClosureTestHistos0To1Tag(afr1, "__GJetCalcPredicted0To1Tag");
-      FillClosureTestHistos0To1Tag(afr5, "__GJetTruthPredicted0To1Tag");
-      FillClosureTestHistos0To1Tag(afr7, "__QCDTruthPredicted0To1Tag");
-      FillClosureTestHistos0To1Tag(afr11, "__GJetCalcTFPredicted0To1Tag");
+      //FillClosureTestHistos0To1Tag(afr5, "__GJetTruthPredicted0To1Tag");
+      //FillClosureTestHistos0To1Tag(afr7, "__QCDTruthPredicted0To1Tag");
+      //FillClosureTestHistos0To1Tag(afr11, "__GJetCalcTFPredicted0To1Tag");
     }
   }
 
@@ -178,9 +179,9 @@ void EmJetEventCount::PredictBackground(int itime, int nJet_tag, bool isfillhist
 
     if( isfillhisto ) {
       FillClosureTestHistos1To2Tag(afr2,  "__GJetCalcPredicted1To2Tag");
-      FillClosureTestHistos1To2Tag(afr4,  "__QCDTruthPredicted1To2Tag");
-      FillClosureTestHistos1To2Tag(afr6,  "__GJetTruthPredicted1To2Tag");
-      FillClosureTestHistos1To2Tag(afr12, "__GJetCalcTFPredicted1To2Tag");
+      //FillClosureTestHistos1To2Tag(afr4,  "__QCDTruthPredicted1To2Tag");
+      //FillClosureTestHistos1To2Tag(afr6,  "__GJetTruthPredicted1To2Tag");
+      //FillClosureTestHistos1To2Tag(afr12, "__GJetCalcTFPredicted1To2Tag");
     }
   }
 }
@@ -276,15 +277,17 @@ void EmJetEventCount::FillEventHistos(string tag, double weight)
     if( (*jet_isEmerging)[ij] ){
     //if( (*jet_Alpha3DSig)[ij]<0.4 && (*jet_medianIP)[ij]>0.05 ){
     //if( (*jet_Alpha3DSig)[ij]<0.5 && (*jet_medianIP)[ij]>0.1 ){
-      FillJetFlavourHistos(ij, "__Emerging"+tag, weight); 
+      //FillJetFlavourHistos(ij, "__Emerging"+tag, weight); 
       if( ijem1!=-1 ) ijem2 = ij;
       else ijem1 = ij;
     }
     else{
-      FillJetFlavourHistos(ij, "__Standard"+tag, weight);
+      //FillJetFlavourHistos(ij, "__Standard"+tag, weight);
     }
   }
   histo_->hist1d["ht"+tag]->Fill(ht4, weight);
+  histo_->hist1d["pv0pt2sum"+tag]->Fill(pv0pt2sum, weight);
+  histo_->hist1d["pv1pt2sum"+tag]->Fill(pv1pt2sum, weight);
   if( ijem1!= -1 && ijem2!=-1 ){
     FillMassHistos(ijem1, ijem2, tag, weight);
   }
@@ -299,6 +302,7 @@ void EmJetEventCount::FillEventHistos(string tag)
 void EmJetEventCount::FillJetFlavourHistos(int ij, string tag, double weight)
 {
   FillJetHistos(ij, tag, weight);
+  /*
   if( !isData_ ){
     if( (*jet_flavour)[ij]==5 || (*jet_flavour)[ij]==19 ){
       FillJetHistos(ij, "__B"+tag, weight);
@@ -307,6 +311,7 @@ void EmJetEventCount::FillJetFlavourHistos(int ij, string tag, double weight)
       FillJetHistos(ij, "__L"+tag, weight);
     }
   }
+  */
 }
 
 void EmJetEventCount::FillJetHistos(int ij, string tag, double weight)
@@ -317,6 +322,9 @@ void EmJetEventCount::FillJetHistos(int ij, string tag, double weight)
   histo_->hist1d["jet_nTrack"+tag]->Fill((*jet_nTrack)[ij], weight);
   histo_->hist1d["jet_nTrackPostCut"+tag]->Fill((*jet_nTrackPostCut)[ij], weight);
   histo_->hist1d["jet_csv"+tag]->Fill((*jet_csv)[ij], weight);
+  histo_->hist1d["jet_medianIP"+tag]->Fill(TMath::Log10((*jet_medianIP)[ij]), weight);
+  histo_->hist1d["jet_Alpha3DSig"+tag]->Fill((*jet_Alpha3DSig)[ij], weight);
+  histo_->hist1d["jet_pT"+std::to_string(ij)+tag]->Fill((*jet_pt)[ij], weight);
 }
 
 void EmJetEventCount::FillMassHistos(int ijem1, int ijem2, string tag, double weight)
