@@ -57,14 +57,18 @@ class EmJetEventCount : public EventCountBase
     int ntimes_;
     vector<vector<double>> vvn1tag_;
     vector<vector<double>> vvn2tag_; 
+    vector<vector<double>> vvn3tag_;
+    vector<vector<double>> vvn4tag_;
     vector<int> vcase1tag_;
     vector<int> vcase2tag_;
     double n1tag_;
     double n2tag_;
+    double n3tag_;
+    double n4tag_;
     string sfrfile_;
 
-    void InitHistograms ();
-    void InitEventCount ();
+    void InitHistograms();
+    void InitEventCount();
     void InitFrHistos(string fFRname);
     void SetFillOption(bool doFill);
     void SetPredictOption(bool doPredict);
@@ -83,6 +87,10 @@ class EmJetEventCount : public EventCountBase
     void FillMassHistos(int ijem1, int ijem2, string tag, double weight);
     std::pair<double, double> GetInvariantMass(int ijem1, int ijem2, int ijsm1, int ijsm2);
     vector<double> GetInvariantMass2(int ijem1, int ijem2, int ijsm1, int ijsm2);
+    float GetBTagDeltaR(int ij);
+    float GetTrkdRToJetAxis(int ij);
+    float GetTrkdistanceToJet(int ij);
+    int GetTrkIdxMaxIP2DSig(int ij);
     void PrintOutResults();
     void PrintResultwithError(const vector<double> &vresult);
     void PrepareNewTree();

@@ -8,7 +8,7 @@ using std::string;
 using namespace FRFormula;
 
 EmJetEventCount::EmJetEventCount(EmJetSampleCollection samplesColl, bool doFillHisto, bool doPredict, int repeatedTime)
-:n1tag_(0.), n2tag_(0.)
+:n1tag_(0.), n2tag_(0.), n3tag_(0.), n4tag_(0.)
 {
   SetMaxEntries(-1);
   TChain* chain = new TChain("emJetSlimmedTree");
@@ -51,13 +51,19 @@ void EmJetEventCount::LoopOverEvent(long eventnumber)
     n2tag_ += tweight_;
     //PrintOutInfo();
   }
+  if( nJet_tag==3 ){
+    n3tag_ += tweight_;
+  }
+  if( nJet_tag==4 ){
+    n4tag_ += tweight_;
+  }
   histo_->hist1d["nJet_tag"]->Fill(nJet_tag, tweight_);
 
   FillPVHistos(nJet_tag);
  
   if( doFill_ ){ 
     FillEventHistos("");
-    if( nJet_tag==0 ) FillEventHistos("__0tag");
+    //if( nJet_tag==0 ) FillEventHistos("__0tag");
     if( nJet_tag==1 ) FillEventHistos("__1tag");
     if( nJet_tag==2 ) FillEventHistos("__2tag");
   }
@@ -77,6 +83,8 @@ void EmJetEventCount::PredictBackground(int itime, int nJet_tag, bool isfillhist
   }
   vvn1tag_[0][itime] += PnTag(afr0, 1) * tweight_;
   vvn2tag_[0][itime] += PnTag(afr0, 2) * tweight_;
+  vvn3tag_[0][itime] += PnTag(afr0, 3) * tweight_;
+  vvn4tag_[0][itime] += PnTag(afr0, 4) * tweight_;
 
   // from 0tag
   if( nJet_tag==0 ){
@@ -89,6 +97,9 @@ void EmJetEventCount::PredictBackground(int itime, int nJet_tag, bool isfillhist
     double afr13[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet un-scaled 0to1tag, in principle should be the same as GJet 0to1tag
     double afr15[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet scaled L and unscaled b 0to1tag
     double afr17[4] = {-1.0, -1.0, -1.0, -1.0}; // results from GJet scaled L and b 0to1tag
+  
+    double afr1half[4] = {-1.0, -1.0, -1.0, -1.0}; // result from GJet 0to1tag, with half fitted b jet fraction
+    double afr1two[4]  = {-1.0, -1.0, -1.0, -1.0}; // result from GJet 1to2tag, with two times fitted b jet fraction
 
     for( int ij=0; ij<4; ij++){
       afr1[ij] = GetFR(histoFR_->histoFR1d["GJet0To1"][itime],     (*jet_nTrackPostCut)[ij]);
@@ -104,6 +115,9 @@ void EmJetEventCount::PredictBackground(int itime, int nJet_tag, bool isfillhist
         afr13[ij] = GetFR(histoFR_->histoFR1d["GJetCalc0To1"][itime], (*jet_nTrackPostCut)[ij]);
         afr15[ij] = GetFR(histoFR_->histoFR1d["GJetCalcScaleL0To1"][itime], (*jet_nTrackPostCut)[ij]);
         afr17[ij] = GetFR(histoFR_->histoFR1d["GJetCalcScaleBL0To1"][itime], (*jet_nTrackPostCut)[ij]);
+
+        afr1half[ij] = GetFR(histoFR_->histoFR1d["GJet0To1half"][itime],     (*jet_nTrackPostCut)[ij]);        
+        afr1two[ij]  = GetFR(histoFR_->histoFR1d["GJet0To1two" ][itime],     (*jet_nTrackPostCut)[ij]);
       }
 
       /*
@@ -126,7 +140,17 @@ void EmJetEventCount::PredictBackground(int itime, int nJet_tag, bool isfillhist
       vvn1tag_[7][itime] += PnTag(afr13, 1) * tweight_;
       vvn1tag_[8][itime] += PnTag(afr15, 1) * tweight_;
       vvn1tag_[9][itime] += PnTag(afr17, 1) * tweight_;  
+
+      // for cutsets with 1 tag requirements
+      vvn2tag_[12][itime] += PnTag(afr1,     2) * tweight_;
+      vvn2tag_[10][itime] += PnTag(afr1half, 2) * tweight_;
+      vvn2tag_[11][itime] += PnTag(afr1two,  2) * tweight_;
+      vvn2tag_[13][itime] += PnTag(afr11,    2) * tweight_;
+      vvn2tag_[14][itime] += PnTag(afr5,     2) * tweight_;
+      vvn2tag_[15][itime] += PnTag(afr7,     2) * tweight_;
     }
+
+    vvn4tag_[1][itime] += PnTag(afr1, 4) * tweight_; 
 
     if( isfillhisto ) {
       //FillClosureTestHistos0To1Tag(afr0, "__GJetOverallPredicted0To1Tag");
@@ -147,6 +171,8 @@ void EmJetEventCount::PredictBackground(int itime, int nJet_tag, bool isfillhist
     double afr14[3] = {-1.0, -1.0, -1.0};
     double afr16[3] = {-1.0, -1.0, -1.0};
     double afr18[3] = {-1.0, -1.0, -1.0};
+    double afr2half[3] = {-1.0, -1.0, -1.0};
+    double afr2two[3]  = {-1.0, -1.0, -1.0};
     int ijet=0;
     for(int ij=0; ij<4; ij++){
       if( (*jet_isEmerging)[ij] ) continue;// skip the emerging jet
@@ -161,21 +187,33 @@ void EmJetEventCount::PredictBackground(int itime, int nJet_tag, bool isfillhist
         afr14[ijet] = GetFR(histoFR_->histoFR1d["GJetCalc1To2"][itime], (*jet_nTrackPostCut)[ij]);// 1to2tag Unscaled b light, in principle should be the same as 1to2tag
         afr16[ijet] = GetFR(histoFR_->histoFR1d["GJetCalcScaleL1To2"][itime], (*jet_nTrackPostCut)[ij]);// 1to2tag scaled light and unscaled b
         afr18[ijet] = GetFR(histoFR_->histoFR1d["GJetCalcScaleBL1To2"][itime], (*jet_nTrackPostCut)[ij]);// 1to2tag scaled light and b
+
+        afr2half[ijet] = GetFR(histoFR_->histoFR1d["GJet1To2half"][itime],  (*jet_nTrackPostCut)[ij]);// 1to2tag with half of fitted b jet fraction
+        afr2two[ijet]  = GetFR(histoFR_->histoFR1d["GJet1To2two"][itime],  (*jet_nTrackPostCut)[ij]); // 1to2tag with two times fitted b jet fraction
       }
       ijet++;
     }
     vvn2tag_[1][itime] += P1tagTo2tag(afr2) * tweight_;
     vvn2tag_[2][itime] += P1tagTo2tag(afr4) * tweight_;
     vvn2tag_[3][itime] += P1tagTo2tag(afr6) * tweight_;
+
+    vvn3tag_[1][itime] += P1tagTo3tag(afr2) * tweight_;
+
     if( itime==0 ) {
       vvn2tag_[5][itime] += P1tagTo2tag(afr10)* tweight_;
       vvn2tag_[6][itime] += P1tagTo2tag(afr12)* tweight_;
       vvn2tag_[7][itime] += P1tagTo2tag(afr14)* tweight_;
       vvn2tag_[8][itime] += P1tagTo2tag(afr16)* tweight_;
       vvn2tag_[9][itime] += P1tagTo2tag(afr18)* tweight_;
+
+      vvn3tag_[6][itime]  += P1tagTo3tag(afr12)    * tweight_;
+      vvn3tag_[10][itime] += P1tagTo3tag(afr2half) * tweight_;
+      vvn3tag_[11][itime] += P1tagTo3tag(afr2two)  * tweight_;
+      vvn3tag_[14][itime] += P1tagTo3tag(afr6)  * tweight_;
+      vvn3tag_[15][itime] += P1tagTo3tag(afr4)  * tweight_;
     }
 
-   histo_->hist1d_double["nJet_tagP"]->Fill(2.0, P1tagTo2tag(afr2) * tweight_);
+    histo_->hist1d_double["nJet_tagP"]->Fill(2.0, P1tagTo2tag(afr2) * tweight_);
 
     if( isfillhisto ) {
       FillClosureTestHistos1To2Tag(afr2,  "__GJetCalcPredicted1To2Tag");
@@ -208,6 +246,10 @@ void EmJetEventCount::FillClosureTestHistos0To1Tag(double fr[], string tag)
   } 
   double prob = PnTag(fr, 1);
   histo_->hist1d["ht"+tag]->Fill(ht4, tweight_*prob);  
+  histo_->hist1d["met_pt"+tag]->Fill(met_pt, tweight_*prob);
+  for(unsigned ij=0; ij<(*jet_pt).size(); ij++){
+    FillJetHistos(ij, tag, tweight_*prob);
+  }
 }
 
 void EmJetEventCount::FillClosureTestHistos1To2Tag(double fr[], string tag)
@@ -242,6 +284,10 @@ void EmJetEventCount::FillClosureTestHistos1To2Tag(double fr[], string tag)
   }
   if( fabs(test-prob)>1e-7 ) std::cout << " inconsistent prob: " << prob << " test "<< test << std::endl;
   histo_->hist1d["ht"+tag]->Fill(ht4, tweight_*prob);
+  histo_->hist1d["met_pt"+tag]->Fill(met_pt, tweight_*prob);
+  for(unsigned ij=0; ij<(*jet_pt).size(); ij++){
+    FillJetHistos(ij, tag, tweight_*prob);    
+  }
 }
 
 // fill PV related histograms
@@ -277,7 +323,7 @@ void EmJetEventCount::FillEventHistos(string tag, double weight)
     if( (*jet_isEmerging)[ij] ){
     //if( (*jet_Alpha3DSig)[ij]<0.4 && (*jet_medianIP)[ij]>0.05 ){
     //if( (*jet_Alpha3DSig)[ij]<0.5 && (*jet_medianIP)[ij]>0.1 ){
-      //FillJetFlavourHistos(ij, "__Emerging"+tag, weight); 
+      FillJetFlavourHistos(ij, "__Emerging"+tag, weight); 
       if( ijem1!=-1 ) ijem2 = ij;
       else ijem1 = ij;
     }
@@ -286,6 +332,7 @@ void EmJetEventCount::FillEventHistos(string tag, double weight)
     }
   }
   histo_->hist1d["ht"+tag]->Fill(ht4, weight);
+  histo_->hist1d["met_pt"+tag]->Fill(met_pt, weight);
   histo_->hist1d["pv0pt2sum"+tag]->Fill(pv0pt2sum, weight);
   histo_->hist1d["pv1pt2sum"+tag]->Fill(pv1pt2sum, weight);
   if( ijem1!= -1 && ijem2!=-1 ){
@@ -325,6 +372,9 @@ void EmJetEventCount::FillJetHistos(int ij, string tag, double weight)
   histo_->hist1d["jet_medianIP"+tag]->Fill(TMath::Log10((*jet_medianIP)[ij]), weight);
   histo_->hist1d["jet_Alpha3DSig"+tag]->Fill((*jet_Alpha3DSig)[ij], weight);
   histo_->hist1d["jet_pT"+std::to_string(ij)+tag]->Fill((*jet_pt)[ij], weight);
+  histo_->hist1d["jet_TrkDeltaR"+tag]->Fill(GetBTagDeltaR(ij), weight);
+  histo_->hist1d["jet_TrkdRToJetAxis"+tag]->Fill(GetTrkdRToJetAxis(ij), weight);
+  histo_->hist1d["jet_TrkdistanceToJet"+tag]->Fill(GetTrkdistanceToJet(ij), weight);
 }
 
 void EmJetEventCount::FillMassHistos(int ijem1, int ijem2, string tag, double weight)
@@ -376,6 +426,42 @@ vector<double> EmJetEventCount::GetInvariantMass2(int ijem1, int ijem2, int ijsm
   double m21 = (jetemVector2+jetsmVector1).Mag();
   vector<double> vmass = {m11, m22, m12, m21};
   return vmass;
+}
+
+float EmJetEventCount::GetBTagDeltaR(int ij)
+{
+  TLorentzVector jetVector;
+  jetVector.SetPtEtaPhiM((*jet_pt)[ij], (*jet_eta)[ij], (*jet_phi)[ij], 0.);
+  int itk = GetTrkIdxMaxIP2DSig(ij);
+  TLorentzVector trackVector;
+  trackVector.SetPtEtaPhiM((*track_pt)[ij][itk], (*track_eta)[ij][itk], (*track_phi)[ij][itk], 0.);
+  return trackVector.DeltaR(jetVector); 
+}
+
+float EmJetEventCount::GetTrkdRToJetAxis(int ij)
+{
+  int itk = GetTrkIdxMaxIP2DSig(ij);
+  return (*track_dRToJetAxis)[ij][itk];
+}
+
+float EmJetEventCount::GetTrkdistanceToJet(int ij)
+{
+  int itk = GetTrkIdxMaxIP2DSig(ij);
+  return (*track_distanceToJet)[ij][itk];
+}
+
+int EmJetEventCount::GetTrkIdxMaxIP2DSig(int ij)
+{
+  // find the track index with the maximum ip2dsig
+  double maxip2dsig = 0;
+  int idx = 0;
+  for(unsigned itk=0; itk<(*track_pt)[ij].size(); itk++){
+    if( fabs((*track_ipXYSig)[ij][itk])>maxip2dsig ) {
+      maxip2dsig = fabs((*track_ipXYSig)[ij][itk]);
+      idx = itk;
+    } 
+  }
+  return idx;
 }
 
 void EmJetEventCount::FinishEventCount()
@@ -435,6 +521,19 @@ void EmJetEventCount::FillEventCountHistos()
 void EmJetEventCount::PrintOutResults()
 {
   std::cout << "Total number of processed events is : "<< TotalEvents_ << std::endl;
+  std::cout << "Total number of 1tag events observed:  "  << n1tag_         << std::endl;
+  std::cout << "Total numebr of 1tag events observed:  "  << histo_->hist1d["nJet_tag"]->GetBinContent(2)  << "+/-"<< histo_->hist1d["nJet_tag"]->GetBinError(2)<< std::endl;
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[0]);
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[1]);
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[2]);
+  std::cout << "Total number of 1tag events predicted(GJet truth) : "; PrintResultwithError(vvn1tag_[3]);
+  std::cout << "Total number of 1tag events predicted(QCD truth): "; PrintResultwithError(vvn1tag_[4]);
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[5]);
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[6]);
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[7]);
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[8]);
+  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[9]);
+  std::cout << "------------------------------------------------" << std::endl;
   std::cout << "Total number of 2tag events observed:   " << n2tag_         << std::endl;
   std::cout << "Total number of 2tag events observed:   " << histo_->hist1d["nJet_tag"]->GetBinContent(3) << "+/-" << histo_->hist1d["nJet_tag"]->GetBinError(3)<< std::endl;
   std::cout << "Total number of 2tag events predicted(GJet overall) : "; PrintResultwithError(vvn2tag_[0]);
@@ -447,19 +546,26 @@ void EmJetEventCount::PrintOutResults()
   std::cout << "Total number of 2tag events predicted               : "; PrintResultwithError(vvn2tag_[7]);
   std::cout << "Total number of 2tag events predicted               : "; PrintResultwithError(vvn2tag_[8]);
   std::cout << "Total number of 2tag events predicted               : "; PrintResultwithError(vvn2tag_[9]);
-  std::cout << "------------------------------------------------" << std::endl;
-  std::cout << "Total number of 1tag events observed:  "  << n1tag_         << std::endl;
-  std::cout << "Total numebr of 1tag events observed:  "  << histo_->hist1d["nJet_tag"]->GetBinContent(2)  << "+/-"<< histo_->hist1d["nJet_tag"]->GetBinError(2)<< std::endl;
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[0]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[1]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[2]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[3]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[4]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[5]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[6]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[7]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[8]);
-  std::cout << "Total number of 1tag events predicted : "; PrintResultwithError(vvn1tag_[9]);
+  std::cout << "------------------------------"                    << std::endl;
+  std::cout << "Total number of 2tag events predicted(GJet Calc, 0to2tag) : "<< vvn2tag_[12][0] << " - " << vvn2tag_[12][0]-vvn2tag_[10][0] << " + "<< vvn2tag_[11][0]-vvn2tag_[12][0] << std::endl;
+  std::cout << "Total number of 2tag events predicted               : "; PrintResultwithError(vvn2tag_[10]);
+  std::cout << "Total number of 2tag events predicted               : "; PrintResultwithError(vvn2tag_[11]);
+  std::cout << "Total number of 2tag events predicted               : "; PrintResultwithError(vvn2tag_[13]);
+  std::cout << "Total number of 2tag events predicted(GJet truth)   : "; PrintResultwithError(vvn2tag_[14]);
+  std::cout << "Total number of 2tag events predicted(QCD truth)  : "  ; PrintResultwithError(vvn2tag_[15]);
+  std::cout << "-------------------------------------------------" << std::endl;
+  std::cout << "Total Number of 3tag events observed:  " << n3tag_ << std::endl;
+  std::cout << "Total Number of 3tag events predicted : "; PrintResultwithError(vvn3tag_[0]);
+  std::cout << "Total Number of 3tag events predicted : " << vvn3tag_[1][0] << " - " <<  vvn3tag_[1][0]-vvn3tag_[10][0] << " + " << vvn3tag_[11][0]-vvn3tag_[1][0] << std::endl;
+  std::cout << "Total Number of 3tag events predicted : "; PrintResultwithError(vvn3tag_[6]);
+  std::cout << "Total Number of 3tag events predicted : "; PrintResultwithError(vvn3tag_[10]);
+  std::cout << "Total Number of 3tag events predicted : "; PrintResultwithError(vvn3tag_[11]);
+  std::cout << "Total Number of 3tag events predicted(GJet truth) : "; PrintResultwithError(vvn3tag_[14]);
+  std::cout << "Total Number of 3tag events predicted(QCD truth): "  ; PrintResultwithError(vvn3tag_[15]);
+  std::cout << "-------------------------------------------------" << std::endl;
+  std::cout << "Total Number of 4tag events observed:  " << n4tag_ << std::endl; 
+  std::cout << "Total Number of 4tag events predicted : "; PrintResultwithError(vvn4tag_[0]);
+  std::cout << "Total Number of 4tag events predicted : "; PrintResultwithError(vvn4tag_[1]);
   std::cout << std::endl;
 }
 
@@ -515,7 +621,7 @@ void EmJetEventCount::PrepareNewTree()
   long eventCount_current = heventcount->Integral(); // number of events in the current tree
   tweight_ = CalculateTreeWeight(fcurrent_, eventCount_current);
   TotalEvents_ += eventCount_current;
-  std::cout << " tree number " << fcurrent_ << " total number of events " << eventCount_current << " tree weight " << tweight_ << " n1tag observed "<< n1tag_ <<" n2tag observed " << n2tag_ << std::endl;
+  std::cout << " tree number " << fcurrent_ << " total number of events " << eventCount_current << " tree weight " << tweight_ << " n1tag observed "<< n1tag_ <<" n2tag observed " << n2tag_ << " n3tag observed " << n3tag_ << " n4tag observed "<< n4tag_ << std::endl;
 }
 
 void EmJetEventCount::InitEventCount()
@@ -526,13 +632,15 @@ void EmJetEventCount::InitEventCount()
 
 void EmJetEventCount::PrepareFrCalResults()
 { 
-  for(unsigned ifrcal=0; ifrcal < 10; ifrcal++){
+  for(unsigned ifrcal=0; ifrcal < 20; ifrcal++){
     vector<double> vinit;
     for(int i=0; i<ntimes_; i++){
       vinit.push_back(0.); 
     }
     vvn1tag_.push_back(vinit);
     vvn2tag_.push_back(vinit);
+    vvn3tag_.push_back(vinit);
+    vvn4tag_.push_back(vinit);
   }
   for(int i=0; i<ntimes_; i++){
     vcase1tag_.push_back(1);

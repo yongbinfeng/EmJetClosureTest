@@ -31,6 +31,7 @@ def user_define_histos():
     """Define histograms in this function"""
     histo_dict = OrderedDict()
     name = 'ht'                        ; histo_dict[name] = Histo1F(name , Bins(100 , 0   , 2500 ) )
+    name = 'met_pt'                    ; histo_dict[name] = Histo1F(name , Bins(100 , 0   , 2500 ) )
     name = 'pv_genreco_disXY'          ; histo_dict[name] = Histo1F(name , Bins( 10 , 0   , 0.01 ) )
     name = 'pv_genreco_disZ'           ; histo_dict[name] = Histo1F(name , Bins( 10 , 0   , 0.01 ) )
     name = 'pv_genreco_disXY_1tag'     ; histo_dict[name] = Histo1F(name , Bins( 10 , 0   , 0.01 ) )
@@ -61,6 +62,9 @@ def user_define_histos():
     name = 'jet_pT3'                   ; histo_dict[name] = Histo1F(name , Bins(150 ,  0. , 1500 ) )
     name = 'jet_medianIP'              ; histo_dict[name] = Histo1F(name , Bins( 70 , -5. ,   2. ) )
     name = 'jet_Alpha3DSig'            ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,   1. ) )
+    name = 'jet_TrkDeltaR'             ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,   2. ) )
+    name = 'jet_TrkdRToJetAxis'        ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,   6.5) )
+    name = 'jet_TrkdistanceToJet'      ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,   3.0) )
     name = 'nJet_tag'                  ; histo_dict[name] = Histo1F(name , Bins( 10 ,  0  ,   10 ) )
     name = 'n1tag'                     ; histo_dict[name] = Histo1F(name , Bins(500 ,  0  ,  50000 ) )
     name = 'n1tag_EM1'                 ; histo_dict[name] = Histo1F(name , Bins(500 ,  0  ,   500 ) )
@@ -95,8 +99,8 @@ def user_define_histos():
         if name[:4]=='jet_':
             histo_clone = clone_object(histo, postfix='Emerging')
             histo_clone_dict[histo_clone.name] = histo_clone
-            histo_clone = clone_object(histo, postfix='Standard')
-            histo_clone_dict[histo_clone.name] = histo_clone
+            #histo_clone = clone_object(histo, postfix='Standard')
+            #histo_clone_dict[histo_clone.name] = histo_clone
     histo_dict.update(histo_clone_dict)
 
     for name, histo in histo_dict.iteritems():
@@ -110,9 +114,9 @@ def user_define_histos():
     histo_dict.update(histo_clone_dict)
 
     for name, histo in histo_dict.iteritems():
-        if name[:4]=='jet_' or name[:2]=='ht' or name[:4]=='mass':
-            histo_clone = clone_object(histo, postfix='0tag')
-            histo_clone_dict[histo_clone.name] = histo_clone
+        if name[:4]=='jet_' or name[:2]=='ht' or name[:4]=='mass' or name[:6]=='met_pt':
+            #histo_clone = clone_object(histo, postfix='0tag')
+            #histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='1tag')
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='2tag')

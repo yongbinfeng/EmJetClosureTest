@@ -9,6 +9,8 @@
 namespace FRFormula{
   double PnTag(double fr[], int nTag);
   double P1tagTo2tag(double fr[]);
+  double P1tagTo3tag(double fr[]);
+  double P2tagTo3tag(double fr[]);
   double PEmergingnTag(double fr[], int nTag, int ijet);
   double PEmerging1tagTo2tag(double fr[], int ijet);
   TH1F* FrHistoCal(TH1F* hfrac1, TH1F* hfrac2, TH1F* hfr1, TH1F* hfr2, double bfrac, std::string tag, int idx);

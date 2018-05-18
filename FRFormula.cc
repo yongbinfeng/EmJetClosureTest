@@ -12,7 +12,7 @@ double FRFormula::PnTag(double fr[], int nTag){
   */
   double p_nTag = 0;
   if( nTag == 0){
-    p_nTag = (1-fr[0]) * (1-fr[1]) * (1-fr[2]) * (1-fr[3]);
+    p_nTag  = (1-fr[0]) * (1-fr[1]) * (1-fr[2]) * (1-fr[3]);
   }
   else if( nTag == 1 ){
     p_nTag  =   fr[0]   * (1-fr[1]) * (1-fr[2]) * (1-fr[3]); 
@@ -27,6 +27,15 @@ double FRFormula::PnTag(double fr[], int nTag){
     p_nTag += (1-fr[0]) *   fr[1]   *   fr[2]   * (1-fr[3]);
     p_nTag +=   fr[0]   * (1-fr[1]) *   fr[2]   * (1-fr[3]);
     p_nTag +=   fr[0]   *   fr[1]   * (1-fr[2]) * (1-fr[3]);
+  }
+  else if( nTag == 3 ){
+    p_nTag  =   fr[0]   *   fr[1]   *   fr[2]   * (1-fr[3]);
+    p_nTag +=   fr[0]   *   fr[1]   * (1-fr[2]) *   fr[3]  ;
+    p_nTag +=   fr[0]   * (1-fr[1]) *   fr[2]   *   fr[3]  ;
+    p_nTag += (1-fr[0]) *   fr[1]   *   fr[2]   *   fr[3]  ;
+  }
+  else if( nTag == 4 ){
+    p_nTag  =   fr[0]   *   fr[1]   *   fr[2]   *   fr[3]  ; 
   }
   else {
     std::cout << " Error: events weight with nTag = " << nTag << " has not been implemented yet!!!" << std::endl;
@@ -44,6 +53,27 @@ double FRFormula::P1tagTo2tag(double fr[]){
   p1tagto2tag += (1-fr[0]) *   fr[1]   * (1-fr[2]);
   p1tagto2tag += (1-fr[0]) * (1-fr[1]) *   fr[2]  ;
   return p1tagto2tag/2.0;
+}
+
+//
+// Calculate the probability/weight when predicting from 1tag to 3-tag
+//
+double FRFormula::P1tagTo3tag(double fr[]){
+  double p1tagto3tag = 0;
+  p1tagto3tag  =   fr[0]   *   fr[1]   * (1-fr[2]);
+  p1tagto3tag +=   fr[0]   * (1-fr[1]) *   fr[2]  ;
+  p1tagto3tag += (1-fr[0]) *   fr[1]   *   fr[2]  ;
+  return p1tagto3tag/3.0;
+}
+
+//
+// Calculate the probability/weight when predicting from 2-tag to 3-tag
+//
+double FRFormula::P2tagTo3tag(double fr[]){
+  double p2tagto3tag = 0;
+  p2tagto3tag  =   fr[0]   * (1-fr[1]);
+  p2tagto3tag += (1-fr[0]) *   fr[1]  ;
+  return p2tagto3tag/3.0;
 }
 
 //

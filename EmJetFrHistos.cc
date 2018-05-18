@@ -143,6 +143,17 @@ void EmJetFrHistos::PrepareTwoTypeVector()
   histoFR1d["GJetTTF0To1"].push_back(histo0to1TTF);
   histoFR1d["GJetTTF1To2"].push_back(histo1to2TTF);
 
+  // fakerate calcualted using 0.5*b_jet_fraction and 2.0*b_jet_fraction
+  //  used to evaulate systematics for more than n-tag
+  TH1F* histo0to1half = FrHistoCal(hfracGJetI_, hfracGJetII_, hfrGJetI_, hfrGJetII_, 0.5*bfrac0_, "0to1",  0);
+  TH1F* histo0to1two  = FrHistoCal(hfracGJetI_, hfracGJetII_, hfrGJetI_, hfrGJetII_, 2.0*bfrac0_, "0to1",  0);
+  TH1F* histo1to2half = FrHistoCal(hfracGJetI_, hfracGJetII_, hfrGJetI_, hfrGJetII_, 0.5*bfrac1_, "1to2",  0);
+  TH1F* histo1to2two  = FrHistoCal(hfracGJetI_, hfracGJetII_, hfrGJetI_, hfrGJetII_, 2.0*bfrac1_, "1to2",  0);
+  histoFR1d["GJet0To1half"].push_back(histo0to1half); 
+  histoFR1d["GJet0To1two" ].push_back(histo0to1two );
+  histoFR1d["GJet1To2half"].push_back(histo1to2half);
+  histoFR1d["GJet1To2two" ].push_back(histo1to2two ); 
+
   std::cout << "  Two types of GJet fakerate and fraction histograms set up..." << std::endl;
 }
 
