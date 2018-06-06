@@ -67,6 +67,8 @@ class EmJetEventCount : public EventCountBase
     double n4tag_;
     string sfrfile_;
 
+
+    bool SelectEvent_metFilter (long eventnumber);
     void InitHistograms();
     void InitEventCount();
     void InitFrHistos(string fFRname);
