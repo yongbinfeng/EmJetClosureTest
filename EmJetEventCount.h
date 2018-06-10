@@ -24,6 +24,7 @@
 #include "EmJetSample.h"
 #include "EmJetFrHistos.h"
 #include "FRFormula.h"
+#include "BTagCalibrationStandalone.h"
 
 
 //#include "Fakerate.h"
@@ -52,6 +53,7 @@ class EmJetEventCount : public EventCountBase
   private:
     unique_ptr<Histos> histo_;
     unique_ptr<EmJetFrHistos> histoFR_;
+    unique_ptr<BTagCalibrationReader> BTagReader_;
     bool doPredict_;
     bool doFill_;
     int ntimes_;
@@ -67,7 +69,10 @@ class EmJetEventCount : public EventCountBase
     double n4tag_;
     string sfrfile_;
 
+    double csvReWeight_;
+
     void InitHistograms();
+    void InitBTagReshaping();
     void InitEventCount();
     void InitFrHistos(string fFRname);
     void SetFillOption(bool doFill);
@@ -87,6 +92,7 @@ class EmJetEventCount : public EventCountBase
     void FillMassHistos(int ijem1, int ijem2, string tag, double weight);
     std::pair<double, double> GetInvariantMass(int ijem1, int ijem2, int ijsm1, int ijsm2);
     vector<double> GetInvariantMass2(int ijem1, int ijem2, int ijsm1, int ijsm2);
+    double ReWeightCsv(long eventnumber);
     float GetBTagDeltaR(int ij);
     float GetTrkdRToJetAxis(int ij);
     float GetTrkdistanceToJet(int ij);

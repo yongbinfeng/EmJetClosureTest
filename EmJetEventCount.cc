@@ -24,6 +24,7 @@ EmJetEventCount::EmJetEventCount(EmJetSampleCollection samplesColl, bool doFillH
   SetPredictOption(doPredict);
   sfrfile_ = samplesColl.FrCalfile;
   Init(tree_);
+  InitBTagReshaping();
   InitCrossSection(samplesColl);
 }
 
@@ -60,10 +61,13 @@ void EmJetEventCount::LoopOverEvent(long eventnumber)
   histo_->hist1d["nJet_tag"]->Fill(nJet_tag, tweight_);
 
   FillPVHistos(nJet_tag);
+
+  // one csvReweight_ for one event. Calculated before filling in csvReweight histograms
+  csvReWeight_ = ReWeightCsv(eventnumber);
  
   if( doFill_ ){ 
     FillEventHistos("");
-    //if( nJet_tag==0 ) FillEventHistos("__0tag");
+    if( nJet_tag==0 ) FillEventHistos("__0tag");
     if( nJet_tag==1 ) FillEventHistos("__1tag");
     if( nJet_tag==2 ) FillEventHistos("__2tag");
   }
@@ -328,7 +332,7 @@ void EmJetEventCount::FillEventHistos(string tag, double weight)
       else ijem1 = ij;
     }
     else{
-      //FillJetFlavourHistos(ij, "__Standard"+tag, weight);
+      FillJetFlavourHistos(ij, "__Standard"+tag, weight);
     }
   }
   histo_->hist1d["ht"+tag]->Fill(ht4, weight);
@@ -349,7 +353,6 @@ void EmJetEventCount::FillEventHistos(string tag)
 void EmJetEventCount::FillJetFlavourHistos(int ij, string tag, double weight)
 {
   FillJetHistos(ij, tag, weight);
-  /*
   if( !isData_ ){
     if( (*jet_flavour)[ij]==5 || (*jet_flavour)[ij]==19 ){
       FillJetHistos(ij, "__B"+tag, weight);
@@ -358,7 +361,6 @@ void EmJetEventCount::FillJetFlavourHistos(int ij, string tag, double weight)
       FillJetHistos(ij, "__L"+tag, weight);
     }
   }
-  */
 }
 
 void EmJetEventCount::FillJetHistos(int ij, string tag, double weight)
@@ -369,12 +371,13 @@ void EmJetEventCount::FillJetHistos(int ij, string tag, double weight)
   histo_->hist1d["jet_nTrack"+tag]->Fill((*jet_nTrack)[ij], weight);
   histo_->hist1d["jet_nTrackPostCut"+tag]->Fill((*jet_nTrackPostCut)[ij], weight);
   histo_->hist1d["jet_csv"+tag]->Fill((*jet_csv)[ij], weight);
+  histo_->hist1d["jet_csvReweight"+tag]->Fill((*jet_csv)[ij], weight*csvReWeight_);
   histo_->hist1d["jet_medianIP"+tag]->Fill(TMath::Log10((*jet_medianIP)[ij]), weight);
   histo_->hist1d["jet_Alpha3DSig"+tag]->Fill((*jet_Alpha3DSig)[ij], weight);
-  histo_->hist1d["jet_pT"+std::to_string(ij)+tag]->Fill((*jet_pt)[ij], weight);
-  histo_->hist1d["jet_TrkDeltaR"+tag]->Fill(GetBTagDeltaR(ij), weight);
-  histo_->hist1d["jet_TrkdRToJetAxis"+tag]->Fill(GetTrkdRToJetAxis(ij), weight);
-  histo_->hist1d["jet_TrkdistanceToJet"+tag]->Fill(GetTrkdistanceToJet(ij), weight);
+  //histo_->hist1d["jet_pT"+std::to_string(ij)+tag]->Fill((*jet_pt)[ij], weight);
+  //histo_->hist1d["jet_TrkDeltaR"+tag]->Fill(GetBTagDeltaR(ij), weight);
+  //histo_->hist1d["jet_TrkdRToJetAxis"+tag]->Fill(GetTrkdRToJetAxis(ij), weight);
+  //histo_->hist1d["jet_TrkdistanceToJet"+tag]->Fill(GetTrkdistanceToJet(ij), weight);
 }
 
 void EmJetEventCount::FillMassHistos(int ijem1, int ijem2, string tag, double weight)
@@ -611,6 +614,50 @@ void EmJetEventCount::InitCrossSection(const EmJetSampleCollection& samplesColl)
     std::cout << "cross section " << sample.xsec << std::endl;
     vtreexsec_.push_back(sample.xsec); 
   }
+}
+
+void EmJetEventCount::InitBTagReshaping()
+{
+  // Initialize b-tagging reshaping
+  csvReWeight_ = 1.0;
+
+  // snippet from https://github.com/cms-btv-pog/CMSPOS-BTaggingExercise/blob/solved/CSVReweight/csvReweight.C#L327
+  std::cout << "===> Loading the input .csv SF file..." << std::endl;
+  std::string inputCSVfile = "CSVv2_Moriond17_G_H.csv";
+  std::string measType = "iterativefit";
+  std::string sysType = "central";
+  BTagCalibration calib("csvv2", inputCSVfile);
+  BTagReader_ = unique_ptr<BTagCalibrationReader>(new BTagCalibrationReader(BTagEntry::OP_RESHAPING, sysType));
+  BTagReader_->load(calib, BTagEntry::FLAV_B, measType);
+  BTagReader_->load(calib, BTagEntry::FLAV_C, measType);
+  BTagReader_->load(calib, BTagEntry::FLAV_UDSG, measType);
+  std::cout << "\tInput CSV weight file = " << inputCSVfile << "; measurementType = " << measType << "; sysType = " << sysType << std::endl;
+}
+
+double EmJetEventCount::ReWeightCsv(long eventnumber)
+{
+  double csvWgtHF = 1., csvWgtLF = 1., csvWgtC = 1.;
+  double csvWgtTotal = 1.;
+  if( isData_ ){ // only reweight MC
+    return 1.0;
+  }
+  for( unsigned ij=0; ij< (*jet_pt).size(); ij++){
+    if( (*jet_flavour)[ij]==5 || (*jet_flavour)[ij]==19 ){
+      double iCSVWgtHF = BTagReader_->eval(BTagEntry::FLAV_B, fabs((*jet_eta)[ij]), (*jet_pt)[ij], (*jet_csv)[ij]);
+      if( iCSVWgtHF!=0 ) csvWgtHF *= iCSVWgtHF;
+    }
+    else if( (*jet_flavour)[ij]==4 ){
+      double iCSVWgtC = BTagReader_->eval(BTagEntry::FLAV_C, fabs((*jet_eta)[ij]), (*jet_pt)[ij], (*jet_csv)[ij]);
+      if( iCSVWgtC!=0 ) csvWgtC *= iCSVWgtC;
+    }
+    else{
+      double iCSVWgtLF = BTagReader_->eval(BTagEntry::FLAV_UDSG, fabs((*jet_eta)[ij]), (*jet_pt)[ij], (*jet_csv)[ij]);
+      if( iCSVWgtLF!=0 ) csvWgtLF *= iCSVWgtLF;
+    }
+  }
+  csvWgtTotal = csvWgtHF * csvWgtC * csvWgtLF;
+  //std::cout << " weight " << csvWgtTotal << std::endl;
+  return csvWgtTotal;
 }
 
 void EmJetEventCount::PrepareNewTree()

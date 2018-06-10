@@ -56,6 +56,7 @@ def user_define_histos():
     name = 'jet_nTrackPostCut_pt2'     ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,  100 ) )
     name = 'jet_nTrackPostCut_pt3'     ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,  100 ) )
     name = 'jet_csv'                   ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,   1. ) )
+    name = 'jet_csvReweight'           ; histo_dict[name] = Histo1F(name , Bins(100 ,  0. ,   1. ) )
     name = 'jet_pT0'                   ; histo_dict[name] = Histo1F(name , Bins(150 ,  0. , 1500 ) )
     name = 'jet_pT1'                   ; histo_dict[name] = Histo1F(name , Bins(150 ,  0. , 1500 ) )
     name = 'jet_pT2'                   ; histo_dict[name] = Histo1F(name , Bins(150 ,  0. , 1500 ) )
@@ -84,7 +85,6 @@ def user_define_histos():
     histo_dict.update(histo_clone_dict)
         
     # Jet plot variations
-    '''
     histo_clone_dict = OrderedDict()
     for name, histo in histo_dict.iteritems():
         if name[:4]=='jet_':
@@ -93,14 +93,13 @@ def user_define_histos():
             histo_clone = clone_object(histo, postfix='L')
             histo_clone_dict[histo_clone.name] = histo_clone
     histo_dict.update(histo_clone_dict)
-    '''
 
     for name, histo in histo_dict.iteritems():
         if name[:4]=='jet_':
             histo_clone = clone_object(histo, postfix='Emerging')
             histo_clone_dict[histo_clone.name] = histo_clone
-            #histo_clone = clone_object(histo, postfix='Standard')
-            #histo_clone_dict[histo_clone.name] = histo_clone
+            histo_clone = clone_object(histo, postfix='Standard')
+            histo_clone_dict[histo_clone.name] = histo_clone
     histo_dict.update(histo_clone_dict)
 
     for name, histo in histo_dict.iteritems():
@@ -115,8 +114,8 @@ def user_define_histos():
 
     for name, histo in histo_dict.iteritems():
         if name[:4]=='jet_' or name[:2]=='ht' or name[:4]=='mass' or name[:6]=='met_pt':
-            #histo_clone = clone_object(histo, postfix='0tag')
-            #histo_clone_dict[histo_clone.name] = histo_clone
+            histo_clone = clone_object(histo, postfix='0tag')
+            histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='1tag')
             histo_clone_dict[histo_clone.name] = histo_clone
             histo_clone = clone_object(histo, postfix='2tag')
