@@ -71,6 +71,7 @@ class EmJetEventCount : public EventCountBase
 
     double csvReWeight_;
 
+    bool SelectEvent_metFilter (long eventnumber);
     void InitHistograms();
     void InitBTagReshaping();
     void InitEventCount();

@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Thu Apr 26 17:31:41 2018 by ROOT version 6.06/01
+// Thu May 24 14:18:32 2018 by ROOT version 6.06/01
 // from TTree emJetSlimmedTree/emJetSlimmedTree
-// found on file: ntuple_JetHTRun2016G1.root
+// found on file: ntuple_JetHTRun2016H.root
 //////////////////////////////////////////////////////////
 
 #ifndef BaseClass_h
@@ -42,7 +42,6 @@ public :
    Float_t         trackfabsmeanz;
    Float_t         pv0pt2sum;
    Float_t         pv1pt2sum;
-   Float_t         met_pt;
    vector<int>     *jet_index;
    vector<float>   *jet_pt;
    vector<float>   *jet_eta;
@@ -80,6 +79,18 @@ public :
    Float_t         pv_reco_chi2;
    Float_t         pv_reco_ndof;
    Int_t           pv_reco_nTracks;
+   Float_t         met_pt;
+   Float_t         met_phi;
+   Float_t         metT1_pt;
+   Float_t         metT1_phi;
+   Bool_t          metFilter_HBHENoise;
+   Bool_t          metFilter_HBHENoiseIso;
+   Bool_t          metFilter_EcalDeadCellTriggerPrimitive;
+   Bool_t          metFilter_goodVertices;
+   Bool_t          metFilter_eeBadSc;
+   Bool_t          metFilter_globalTightHalo2016;
+   Bool_t          metFilter_badChargedCandidate;
+   Bool_t          metFilter_badPFMuon;
 
    // List of branches
    TBranch        *b_event;   //!
@@ -96,7 +107,6 @@ public :
    TBranch        *b_trackfabsmeanz;   //!
    TBranch        *b_pv0pt2sum;   //!
    TBranch        *b_pv1pt2sum;   //!
-   TBranch        *b_met_pt;   //!
    TBranch        *b_jet_index;   //!
    TBranch        *b_jet_pt;   //!
    TBranch        *b_jet_eta;   //!
@@ -134,6 +144,18 @@ public :
    TBranch        *b_pv_reco_chi2;   //!
    TBranch        *b_pv_reco_ndof;   //!
    TBranch        *b_pv_reco_nTracks;   //!
+   TBranch        *b_met_pt;   //!
+   TBranch        *b_met_phi;   //!
+   TBranch        *b_metT1_pt;   //!
+   TBranch        *b_metT1_phi;   //!
+   TBranch        *b_metFilter_HBHENoise;   //!
+   TBranch        *b_metFilter_HBHENoiseIso;   //!
+   TBranch        *b_metFilter_EcalDeadCellTriggerPrimitive;   //!
+   TBranch        *b_metFilter_goodVertices;   //!
+   TBranch        *b_metFilter_eeBadSc;   //!
+   TBranch        *b_metFilter_globalTightHalo2016;   //!
+   TBranch        *b_metFilter_badChargedCandidate;   //!
+   TBranch        *b_metFilter_badPFMuon;   //!
 
    BaseClass(TTree *tree=0);
    virtual ~BaseClass();
@@ -236,7 +258,6 @@ void BaseClass::Init(TTree *tree)
    fChain->SetBranchAddress("trackfabsmeanz", &trackfabsmeanz, &b_trackfabsmeanz);
    fChain->SetBranchAddress("pv0pt2sum", &pv0pt2sum, &b_pv0pt2sum);
    fChain->SetBranchAddress("pv1pt2sum", &pv1pt2sum, &b_pv1pt2sum);
-   fChain->SetBranchAddress("met_pt", &met_pt, &b_met_pt);
    fChain->SetBranchAddress("jet_index", &jet_index, &b_jet_index);
    fChain->SetBranchAddress("jet_pt", &jet_pt, &b_jet_pt);
    fChain->SetBranchAddress("jet_eta", &jet_eta, &b_jet_eta);
@@ -274,6 +295,18 @@ void BaseClass::Init(TTree *tree)
    fChain->SetBranchAddress("pv_reco_chi2", &pv_reco_chi2, &b_pv_reco_chi2);
    fChain->SetBranchAddress("pv_reco_ndof", &pv_reco_ndof, &b_pv_reco_ndof);
    fChain->SetBranchAddress("pv_reco_nTracks", &pv_reco_nTracks, &b_pv_reco_nTracks);
+   fChain->SetBranchAddress("met_pt", &met_pt, &b_met_pt);
+   fChain->SetBranchAddress("met_phi", &met_phi, &b_met_phi);
+   fChain->SetBranchAddress("metT1_pt", &metT1_pt, &b_metT1_pt);
+   fChain->SetBranchAddress("metT1_phi", &metT1_phi, &b_metT1_phi);
+   fChain->SetBranchAddress("metFilter_HBHENoise", &metFilter_HBHENoise, &b_metFilter_HBHENoise);
+   fChain->SetBranchAddress("metFilter_HBHENoiseIso", &metFilter_HBHENoiseIso, &b_metFilter_HBHENoiseIso);
+   fChain->SetBranchAddress("metFilter_EcalDeadCellTriggerPrimitive", &metFilter_EcalDeadCellTriggerPrimitive, &b_metFilter_EcalDeadCellTriggerPrimitive);
+   fChain->SetBranchAddress("metFilter_goodVertices", &metFilter_goodVertices, &b_metFilter_goodVertices);
+   fChain->SetBranchAddress("metFilter_eeBadSc", &metFilter_eeBadSc, &b_metFilter_eeBadSc);
+   fChain->SetBranchAddress("metFilter_globalTightHalo2016", &metFilter_globalTightHalo2016, &b_metFilter_globalTightHalo2016);
+   fChain->SetBranchAddress("metFilter_badChargedCandidate", &metFilter_badChargedCandidate, &b_metFilter_badChargedCandidate);
+   fChain->SetBranchAddress("metFilter_badPFMuon", &metFilter_badPFMuon, &b_metFilter_badPFMuon);
    Notify();
 }
 

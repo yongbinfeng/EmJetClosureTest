@@ -31,6 +31,10 @@ EmJetEventCount::EmJetEventCount(EmJetSampleCollection samplesColl, bool doFillH
 void EmJetEventCount::LoopOverEvent(long eventnumber)
 {
   if( pvtrack_fraction<0.1 ) return;
+  if( !SelectEvent_metFilter(eventnumber) ) {
+    std::cout << run << ":" << lumi << ":" << event << std::endl;
+    return;
+  }
   //if( pv1pt2sum > 1500.0 ) return;
   int nJet_tag = 0;
   //double ht4 = (*jet_pt)[0] + (*jet_pt)[1] + (*jet_pt)[2] + (*jet_pt)[3];
@@ -587,6 +591,24 @@ void EmJetEventCount::InitFrHistos(string fFRname)
   if(doPredict_){
     histoFR_ = unique_ptr<EmJetFrHistos>(new EmJetFrHistos(fFRname, ntimes_, isData_));
   }
+}
+
+bool EmJetEventCount::SelectEvent_metFilter (long eventnumber)
+{
+  /*
+  bool metFilter_all =
+    metFilter_HBHENoise                    &&
+    metFilter_HBHENoiseIso                 &&
+    metFilter_EcalDeadCellTriggerPrimitive &&
+    metFilter_goodVertices                 &&
+    metFilter_eeBadSc                      &&
+    metFilter_globalTightHalo2016          &&
+    (!metFilter_badChargedCandidate)          &&
+    (!metFilter_badPFMuon          )          ;
+  */
+  //bool metFilter_all = metFilter_EcalDeadCellTriggerPrimitive ;
+  bool metFilter_all = !metFilter_badPFMuon;
+  return metFilter_all;
 }
 
 void EmJetEventCount::InitHistograms()
